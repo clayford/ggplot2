@@ -1,5 +1,6 @@
-.Rproj
+*.Rproj
 data/
 *.pdf
 *.csv
-
+.Rhistory
+.Rproj.user/
