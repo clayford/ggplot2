@@ -1,0 +1,51 @@
+---
+title: "R Graphics with ggplot2"
+author: "Clay Ford"
+date: "Fall 2015"
+output: beamer_presentation
+---
+
+## Workshop plan
+
+- overview of ggplot2 philosophy and logic
+- quick, exploratory graphs
+- fine tuning graphs
+- common manipulation tasks to get your data ready for ggplot2
+
+
+## The ggplot2 philosophy
+
+- ggplot2 is based on the "Grammar of Graphics", a book by Leland Wilkinson
+- Instead of thinking in terms of types of graphs (scatterplots, histograms), we think in terms of **mapping** data to **aesthetic** properties of **geometric shapes**
+- If you know the grammar of graphics, ggplot2 allows you to compose novel graphs that are not restricted by a set of canned templates
+
+## The Grammar of Graphics
+
+There's an entire book on this, but I'll boil it down to one slide (courtesy of Wickham, 2009, p. 3):
+
+- A statistical graphic is a mapping from data to aesthetic attributes (color, shape, size, location) of geometric objects (points, lines, bars). 
+
+- The geometric objects are drawn in a specific coordinate system.
+
+- The plot may also contain statistical transformation of the data (means, medians, standard deviations).
+
+- Faceting can be used to generate the same plot for different subsets of the data.
+
+## Getting Started
+
+- ggplot2 is an R package that has to be installed:   
+  `install.packages("ggplot2")`
+  
+- Once installed, you need to load it once per R session if you want to use it:   
+  `library(ggplot2)`
+
+## References
+
+Wickham, Hadley. *ggplot2: Elegant Graphics for Data Analysis*. Springer, 2009.
+
+R Graph Catalog  
+http://shinyapps.stat.ubc.ca/r-graph-catalog/
+
+
+
+
