@@ -21,15 +21,16 @@ output: beamer_presentation
 
 ## The Grammar of Graphics
 
-There's an entire book on this, but I'll boil it down to one slide (courtesy of Wickham, 2009, p. 3):
+There's an entire book on this, but I'll attempt to boil it down to one slide (*courtesy of Wickham, 2009, p. 3*):
 
-- A statistical graphic is a mapping from data to aesthetic attributes (color, shape, size, location) of geometric objects (points, lines, bars). 
+- A statistical graphic is a mapping from data to aesthetic attributes (location, color, shape, size) of geometric objects (points, lines, bars). 
 
 - The geometric objects are drawn in a specific coordinate system.
 
 - The plot may also contain statistical transformation of the data (means, medians, standard deviations).
 
 - Faceting can be used to generate the same plot for different subsets of the data.
+
 
 ## Getting Started
 
@@ -39,13 +40,124 @@ There's an entire book on this, but I'll boil it down to one slide (courtesy of 
 - Once installed, you need to load it once per R session if you want to use it:   
   `library(ggplot2)`
 
+- graphs are created with ggplot2 by layering (or adding) functions. You actually use a `+` symbol between functions.
+
+Example:  
+`ggplot(data=vitals, aes(x=weight, y=height)) + geom_point()`
+
+That would create a scatterplot of height vs. weight.
+
+## basic ggplot structure
+
+**Specify data and aesthetics**   
+`ggplot(data, aes(x=, y=, color=, shape=, size=)) +`   
+
+**Specify geometric shapes**  
+`geom_xxxxx() +`   
+
+**Specify statistical, scale or coordinate changes**   
+`stat_xxxx() +` or `scale_xxxx() +` or `coord_xxxx() +`   
+
+**Specify how to layout graphs of subsetted data**   
+`facet_xxxx() +`   
+
+**Specify themes and labels**   
+`theme_xxxx() + labs(title=, x=, y=)`
+
+Notice the `+` signs. We add, or layer, these specifications to `ggplot()`
+
+## ggplot example - basic
+
+```{r, message=FALSE, fig.height=3, fig.width=6}
+library(ggplot2) # once per session
+ggplot(iris, aes(x = Petal.Width, y = Petal.Length, 
+                 color=Species)) + 
+  geom_point() 
+```
+
+## ggplot example - update labels
+
+```{r, message=FALSE, fig.height=3, fig.width=6}
+ggplot(iris, aes(x = Petal.Width, y = Petal.Length, 
+                 color=Species)) + geom_point() +
+  labs(title="Petals of the Iris data set", 
+       x="Petal Width (cm)", y="Petal Length (cm)") 
+
+```
+
+## ggplot example - update y-axis
+
+```{r, message=FALSE, fig.height=3, fig.width=6}
+ggplot(iris, aes(x = Petal.Width, y = Petal.Length, 
+                 color=Species)) + geom_point() +
+  scale_y_continuous(limits=c(0,8), breaks=0:8)
+
+```
+
+## ggplot example - zoom in on plot
+
+```{r, message=FALSE, fig.height=3, fig.width=6}
+ggplot(iris, aes(x = Petal.Width, y = Petal.Length, 
+                 color=Species)) + geom_point() +
+  coord_cartesian(xlim = c(0,1.5))
+
+```
+
+
+## ggplot example - change theme
+
+```{r, message=FALSE, fig.height=3, fig.width=6}
+ggplot(iris, aes(x = Petal.Width, y = Petal.Length, 
+                 shape=Species)) + geom_point() +
+  theme_bw()
+
+```
+
+## ggplot example - add multiple geoms
+
+```{r, message=FALSE, fig.height=3, fig.width=6}
+ggplot(iris, aes(x = Petal.Width, y = Petal.Length, 
+                 shape=Species)) + geom_point() +
+  geom_smooth(method="lm", color="black") +
+  theme_bw()
+```
+
+
+## ggplot2 - points to remember
+
+- Can do a lot with `ggplot(data, aes()) + geom_xxx()`!
+- Data must be a data frame (not a matrix or collection of vectors)
+- Data often must be in _long_ format, which could mean reshaping data
+- The package is still evolving (ie, code that works today may not work in the future)
+- Does not do 3D plots
+
+Let's go to R!
+
 ## References
 
-Wickham, Hadley. *ggplot2: Elegant Graphics for Data Analysis*. Springer, 2009.
+Wickham, H. (2009), _ggplot2: Elegant Graphics for Data Analysis_, Springer.
 
-R Graph Catalog  
+Wickham, H. (2010), "A Layered Grammar of Graphics", _Journal of Computational and Graphical Statistics_, Volume 19, Number 1.
+
+Chang, W. (2013), _R Graphics Cookbook_, O'Reilly.
+
+**ggplot2 cheat sheet**    
+http://www.rstudio.com/wp-content/uploads/2015/04/ggplot2-cheatsheet.pdf
+
+**R Graph Catalog**   
 http://shinyapps.stat.ubc.ca/r-graph-catalog/
 
+
+## StatLab
+
+Thanks for coming today!
+
+For help and advice with your data analysis, contact StatLab to set up an appointment: statlab@virginia.edu
+
+Sign up for more workshops or see past workshops:
+http://data.library.virginia.edu/statlab/
+
+Register for the Research Data Services newsletter to stay up-to-date on StatLab events and resources: http://data.library.virginia.edu/newsletters/
 
 
 

@@ -176,3 +176,187 @@ m + stat_quantile(colour = "red", size = 2, linetype = 2)
 
 # Use qplot instead
 qplot(year, rating, data=movies, geom="quantile")
+
+
+
+# Themes
+
+p <- ggplot(mtcars) + geom_point(aes(x = wt, y = mpg,
+                                     colour=factor(gear))) + facet_wrap(~am)
+
+p
+p + theme_gray()
+p + theme_bw()
+p + theme_linedraw()
+p + theme_light()
+p + theme_minimal()
+p + theme_classic()
+
+
+# geom_violin
+p <- ggplot(mtcars, aes(factor(cyl), mpg))
+p
+p + geom_violin()
+qplot(factor(cyl), mpg, data = mtcars, geom = "violin")
+
+p + geom_violin() + geom_jitter(height = 0)
+p + geom_violin() + coord_flip()
+qplot(factor(cyl), mpg, data = mtcars, geom = "violin") +
+  coord_flip()
+
+# Scale maximum width proportional to sample size:
+p + geom_violin(scale = "count")
+
+# Scale maximum width to 1 for all violins:
+p + geom_violin(scale = "width")
+
+# Default is to trim violins to the range of the data. To disable:
+p + geom_violin(trim = FALSE)
+
+# Use a smaller bandwidth for closer density fit (default is 1).
+p + geom_violin(adjust = .5)
+
+# Add aesthetic mappings
+# Note that violins are automatically dodged when any aesthetic is
+# a factor
+p + geom_violin(aes(fill = cyl))
+p + geom_violin(aes(fill = factor(cyl)))
+p + geom_violin(aes(fill = factor(vs)))
+p + geom_violin(aes(fill = factor(am)))
+
+# Set aesthetics to fixed value
+p + geom_violin(fill = "grey80", colour = "#3366FF")
+qplot(factor(cyl), mpg, data = mtcars, geom = "violin",
+      colour = I("#3366FF"))
+
+# Scales vs. coordinate transforms -------
+# Scale transformations occur before the density statistics are computed.
+# Coordinate transformations occur afterwards.  Observe the effect on the
+# number of outliers.
+library(plyr) # to access round_any
+m <- ggplot(movies, aes(y = votes, x = rating,
+                        group = round_any(rating, 0.5)))
+m + geom_violin()
+m + geom_violin() + scale_y_log10()
+m + geom_violin() + coord_trans(y = "log10")
+m + geom_violin() + scale_y_log10() + coord_trans(y = "log10")
+
+# Violin plots with continuous x:
+# Use the group aesthetic to group observations in violins
+qplot(year, budget, data = movies, geom = "violin")
+qplot(year, budget, data = movies, geom = "violin",
+      group = round_any(year, 10, floor))
+
+
+d <- ggplot(diamonds, aes(x = cut, y = clarity))
+# By default, all categorical variables in the plot form grouping
+# variables, and the default behavior in stat_sum is to show the
+# proportion. Specifying stat_sum with no group identifier leads to
+# a plot which is not meaningful:
+d + stat_sum()
+# To correct this problem and achieve a more desirable plot, we need
+# to specify which group the proportion is to be calculated over.
+# There are several ways to do this:
+
+# by overall proportion
+d + stat_sum(aes(group = 1))
+d + stat_sum(aes(group = 1)) + scale_size(range = c(3, 10))
+d + stat_sum(aes(group = 1)) + scale_size_area(max_size = 10)
+
+# by cut
+d + stat_sum(aes(group = cut))
+d + stat_sum(aes(group = cut, colour = cut))
+
+# by clarity
+d + stat_sum(aes(group = clarity))
+d + stat_sum(aes(group = clarity, colour = cut))
+
+# Instead of proportions, can also use sums
+d + stat_sum(aes(size = ..n..))
+
+# Can also weight by another variable
+d + stat_sum(aes(group = 1, weight = price))
+d + stat_sum(aes(group = 1, weight = price, size = ..n..))
+
+# Or using qplot
+qplot(cut, clarity, data = diamonds)
+qplot(cut, clarity, data = diamonds, stat = "sum", group = 1)
+
+
+
+# Generate data
+c <- ggplot(mtcars, aes(factor(cyl)))
+
+# By default, uses stat="bin", which gives the count in each category
+c + geom_bar()
+c + geom_bar(width=.5)
+c + geom_bar() + coord_flip()
+c + geom_bar(fill="white", colour="darkgreen")
+
+# Use qplot
+qplot(factor(cyl), data=mtcars, geom="bar")
+qplot(factor(cyl), data=mtcars, geom="bar", fill=factor(cyl))
+
+# When the data contains y values in a column, use stat="identity"
+library(plyr)
+# Calculate the mean mpg for each level of cyl
+mm <- ddply(mtcars, "cyl", summarise, mmpg = mean(mpg))
+ggplot(mm, aes(x = factor(cyl), y = mmpg)) + geom_bar(stat = "identity")
+
+# Stacked bar charts
+qplot(factor(cyl), data=mtcars, geom="bar", fill=factor(vs))
+qplot(factor(cyl), data=mtcars, geom="bar", fill=factor(gear))
+
+# Stacked bar charts are easy in ggplot2, but not effective visually,
+# particularly when there are many different things being stacked
+ggplot(diamonds, aes(clarity, fill=cut)) + geom_bar()
+ggplot(diamonds, aes(color, fill=cut)) + geom_bar() + coord_flip()
+
+# Faceting is a good alternative:
+ggplot(diamonds, aes(clarity)) + geom_bar() +
+  facet_wrap(~ cut)
+# If the x axis is ordered, using a line instead of bars is another
+# possibility:
+ggplot(diamonds, aes(clarity)) +
+  geom_freqpoly(aes(group = cut, colour = cut))
+
+# Dodged bar charts
+ggplot(diamonds, aes(clarity, fill=cut)) + geom_bar(position="dodge")
+# compare with
+ggplot(diamonds, aes(cut, fill=cut)) + geom_bar() +
+  facet_grid(. ~ clarity)
+
+# But again, probably better to use frequency polygons instead:
+ggplot(diamonds, aes(clarity, colour=cut)) +
+  geom_freqpoly(aes(group = cut))
+
+# Often we don't want the height of the bar to represent the
+# count of observations, but the sum of some other variable.
+# For example, the following plot shows the number of diamonds
+# of each colour
+qplot(color, data=diamonds, geom="bar")
+# If, however, we want to see the total number of carats in each colour
+# we need to weight by the carat variable
+qplot(color, data=diamonds, geom="bar", weight=carat, ylab="carat")
+
+# A bar chart used to display means
+meanprice <- tapply(diamonds$price, diamonds$cut, mean)
+cut <- factor(levels(diamonds$cut), levels = levels(diamonds$cut))
+qplot(cut, meanprice)
+qplot(cut, meanprice, geom="bar", stat="identity")
+qplot(cut, meanprice, geom="bar", stat="identity", fill = I("grey50"))
+
+# Another stacked bar chart example
+k <- ggplot(mpg, aes(manufacturer, fill=class))
+k + geom_bar()
+# Use scales to change aesthetics defaults
+k + geom_bar() + scale_fill_brewer()
+k + geom_bar() + scale_fill_grey()
+
+# To change plot order of class varible
+# use factor() to change order of levels
+mpg$class <- factor(mpg$class, levels = c("midsize", "minivan",
+                                          "suv", "compact", "2seater", "subcompact", "pickup"))
+m <- ggplot(mpg, aes(manufacturer, fill=class))
+m + geom_bar()
+
