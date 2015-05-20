@@ -360,3 +360,49 @@ mpg$class <- factor(mpg$class, levels = c("midsize", "minivan",
 m <- ggplot(mpg, aes(manufacturer, fill=class))
 m + geom_bar()
 
+
+
+# USING DATA from http://www.bristol.ac.uk/cmm/learning/mmsoftware/data-rev.html
+dat <- read.table("data/datasets/chem97.txt", 
+                  col.names = c("lea.id","sch.id","ind.id","score","gender","age","avg.score"))
+
+ggplot(dat, aes(x=factor(gender), y=score)) + geom_boxplot()
+ggplot(dat, aes(x=age, y=score)) + geom_point()
+ggplot(dat, aes(x=age, y=score)) + geom_jitter()
+ggplot(dat, aes(x=age, y=score)) + geom_jitter() + facet_grid(~ gender)
+ggplot(dat, aes(x=avg.score, y=score)) + geom_point()
+ggplot(dat, aes(x=avg.score, y=score)) + geom_jitter()
+ggplot(dat, aes(x=avg.score, y=score)) + geom_jitter(alpha=1/10) + facet_grid(~ gender)
+
+
+
+library(faraway)
+data(jsp)
+ggplot(jsp, aes(x=raven, y=math)) + geom_jitter()
+ggplot(jsp, aes(x=raven, y=math, color=gender)) + geom_jitter()
+ggplot(jsp, aes(x=raven, y=math, color=class)) + geom_jitter()
+ggplot(jsp, aes(x=raven, y=math, color=social)) + geom_jitter()
+ggplot(jsp, aes(x=raven, y=math, color=gender)) + geom_jitter() + facet_wrap(~ social)
+ggplot(jsp, aes(x=raven, y=math, color=gender)) + geom_jitter() + facet_wrap(class ~ social)
+
+
+ggplot(jsp, aes(x=social, y=math)) + geom_boxplot()
+ggplot(jsp, aes(x=social, y=math)) + geom_jitter()
+ggplot(jsp, aes(x=social, y=math)) + geom_jitter(position = position_jitter(width = .1))
+ggplot(jsp, aes(x=social, y=math, color=gender)) + geom_jitter(position = position_jitter(width = .1))
+
+ggplot(jsp, aes(x=social, y=math, size=raven)) + geom_jitter(position = position_jitter(width = .1))
+# how to change scale of raven?
+ggplot(jsp, aes(x=social, y=math, size=raven)) + 
+  geom_jitter(position = position_jitter(width = .1), alpha=1/8) +
+  scale_size_continuous(breaks = seq(5,30,5))
+
+
+ggplot(jsp, aes(x=gender, y=math)) + geom_boxplot()
+ggplot(jsp, aes(x=class, y=math)) + geom_boxplot()
+
+ggplot(jsp, aes(x=raven, y=math)) + geom_jitter() + facet_grid(~ class)
+ggplot(jsp, aes(x=raven, y=math)) + geom_jitter() + facet_grid(~ social)
+
+ggplot(jsp, aes(x=raven, y=math)) + geom_jitter() + facet_grid(~ social) +
+  geom_smooth()

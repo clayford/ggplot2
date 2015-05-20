@@ -20,6 +20,7 @@
 install.packages("ggplot2")
 install.packages("reshape2")
 install.packages("scales")
+install.packages("RColorBrewer")
 
 library(ggplot2)
 
@@ -293,6 +294,7 @@ ggplot(Oxboys, aes(x=age,y=height, group=Subject)) +
 # result for each flip. Here's one way to generate the data in R.
 
 # one record per flip per subject
+set.seed(1)
 result <- sample(c("H","T"), size = 15*100, replace = TRUE, prob = c(0.6,0.4))
 subject <- rep(1:15, each = 100)
 # recall: data must be in data frame for ggplot
@@ -300,9 +302,12 @@ dat <- data.frame(result, subject)
 head(dat)
 dim(dat)
 
-# make a bar plot of counts for all heads and tails
+# make a bar plot of counts for all heads and tails. Notice ggplot2
+# automatically tallies up the number of heads and tails. That's because
+# geom_bar() uses a default statistical transformation: stat="bin"
 ggplot(dat, aes(x=result)) + geom_bar()
 ggplot(dat, aes(x=result)) + geom_bar(width=0.5)
+
 
 # make a bar plot of counts for each subject
 ggplot(dat, aes(x=subject, fill=result)) + geom_bar()
@@ -315,6 +320,12 @@ ggplot(dat, aes(x=subject, fill=result)) + geom_bar(position="dodge")
 ggplot(dat, aes(x=subject, fill=result)) + geom_bar(position="dodge") +
   scale_x_discrete(breaks=1:15, labels=1:15, limits=as.character(1:15))
 
+# using faceting
+ggplot(dat, aes(x=result, fill=result)) + geom_bar(width=0.5) + 
+  facet_wrap(~ subject)
+# no need for legend; remove using + guides(fill=FALSE)
+ggplot(dat, aes(x=result, fill=result)) + geom_bar(width=0.5) + 
+  facet_wrap(~ subject) + guides(fill=FALSE)
 
 # Now let's say you recruit 15 people to flip a loaded coin 100 times and record the
 # result for each subject, that is total heads and tails.
@@ -331,7 +342,7 @@ ggplot(dat2, aes(x=subject, y=Freq, fill=result)) +
 # first have to find total and save as data frame
 dat3 <- aggregate(Freq ~ result, data=dat2, sum)
 dat3
-ggplot(dat2, aes(x=result, y=Freq)) + geom_bar(stat="identity", width=0.5)
+ggplot(dat3, aes(x=result, y=Freq)) + geom_bar(stat="identity", width=0.5)
 
 
 # Your turn!
@@ -347,6 +358,18 @@ ggplot(mtcars, aes(x=factor(am))) + geom_bar(width=0.5)
 
 
 # Advanced Topics ---------------------------------------------------------
+
+# multiple geoms
+
+# adding fitted regression lines with CI and save
+p <- ggplot(iris, aes(x = Petal.Width, y = Petal.Length, color=Species)) + 
+  geom_point() +
+  geom_smooth(method="lm") + 
+  ggtitle("Petals of the Iris data set") 
+p  
+
+# "zoom in" on plot with coord_cartesian()
+p + coord_cartesian(xlim=c(0,0.75), ylim = c(0, 2))
 
 
 # add mean to boxplots
@@ -401,17 +424,6 @@ ggplot(Indo2, aes(x=time,y=tMean)) +
   geom_point(size=2) +
   geom_errorbar(aes(ymin=tMean-2*tSE, ymax=tMean+2*tSE), width=0.2)
 
-# multiple geoms
-
-# adding fitted regression lines with CI and save
-p <- ggplot(iris, aes(x = Petal.Width, y = Petal.Length, color=Species)) + 
-  geom_point() +
-  geom_smooth(method="lm") + 
-  ggtitle("Petals of the Iris data set") 
-p  
-
-# "zoom in" on plot with coord_cartesian()
-p + coord_cartesian(xlim=c(0,0.75), ylim = c(0, 2))
 
 # overlayed histograms with transparency
 
@@ -421,9 +433,33 @@ ggplot(iris, aes(x=Petal.Length, fill=Species)) +
 # alpha = transparency setting
 
 
-# themes
-# guides (legends)
 # saving
+
+
+
+# editing guides (legends) 
+
+# plot Ozone vs. Temp with point color mapped to Month; we have to use the 
+# factor() function to ensure Month is treated as a categorical variable.
+# Compare the difference:
+
+ggplot(airquality, aes(x=Temp, y=Ozone, color=Month)) + geom_point()
+ggplot(airquality, aes(x=Temp, y=Ozone, color=factor(Month))) + geom_point()
+
+# The second plot is what we want, but look at the legend title. How can we fix 
+# that? A discrete factor (Month) is mapped to color, so we need to change the 
+# properties of the color scale. Therefore we use the scale_color_discrete() 
+# function. NOTE: month.name is a built-in R function that contains names of
+# months in a vector. Below I extract the months numbered 5 - 9.
+
+ggplot(airquality, aes(x=Temp, y=Ozone, color=factor(Month))) + geom_point() +
+  scale_color_discrete(name = "Month", labels=month.name[5:9])
+
+
+# get rid of gray background
+ggplot(airquality, aes(x=Temp, y=Ozone, color=factor(Month))) + geom_point() +
+  scale_color_discrete(name = "Month", labels=month.name[5:9]) +
+  theme_bw()
 
 
 # help(RColorBrewer) for different palettes 
