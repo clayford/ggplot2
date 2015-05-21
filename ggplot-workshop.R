@@ -26,8 +26,11 @@ library(ggplot2)
 
 # scatterplots ------------------------------------------------------------
 
-# geom_point() 
+# Let's start with the tried and true iris data set. This famous data set gives 
+# the measurements (in cm) of the variables sepal length and width and petal
+# length and width, respectively, for 50 flowers from each of 3 species of iris.
 
+# geom_point() 
 ggplot(iris, aes(x = Petal.Width, y = Petal.Length)) + 
   geom_point() 
 
@@ -45,13 +48,14 @@ ggplot(iris, aes(x = Petal.Width, y = Petal.Length,
                  shape=Species, color=Species)) + 
   geom_point() 
 
-# mapping species to color and shape and making points bigger
+# mapping species to color and shape and making points bigger, plus add fitted
+# regression lines:
 ggplot(iris, aes(x = Petal.Width, y = Petal.Length, 
                  color=Species, shape=Species)) + 
-  geom_point(size=3) 
+  geom_point(size=3) +
+  geom_smooth(method="lm") # have to specify method="lm" for straight regression lines
 
-# mapping species to color and Sepal.Length to size of dots
-# balloon scatter plot
+# mapping species to color and Sepal.Length to size of dots, aka a bubblechart
 ggplot(iris, aes(x = Petal.Width, y = Petal.Length, 
                  color=Species, size=Sepal.Length)) + 
   geom_point() 
@@ -61,7 +65,7 @@ ggplot(iris, aes(x = Petal.Width, y = Petal.Length,
                  color=Species, size=Sepal.Length)) + 
   geom_point() +
   labs(y="Petal Length (cm)", x= "Petal Width (cm)", 
-       size="Sepal Length", title="Iris Balloon Plot")
+       size="Sepal Length", title="Iris Bubblechart")
 
 # Your turn!
 
@@ -74,18 +78,21 @@ names(Puromycin)
 # Create a scatterplot. Plot conc on the x-axis, rate on the y-axis, and map
 # the color of the points to state.
 ggplot(Puromycin, aes(x=conc,y=rate, color=state)) + geom_point()
+ggplot(Puromycin, aes(x=conc,y=rate, color=state)) + geom_point() +
+  geom_smooth(se=F)
 
 
 # boxplots ----------------------------------------------------------------
 
 # geom_boxplot()
 
+ggplot(iris, aes(x=Species, y=Petal.Width)) +
+  geom_boxplot()
+
 # Notes: the box is the middle 50% of the data (IQR), the line is the median, 
 # the "whiskers" extend to the farthest point that is less than 1.5 x IQR from
 # the edge of the box.
 
-ggplot(iris, aes(x=Species, y=Petal.Width)) +
-  geom_boxplot()
 
 # thinner boxes
 ggplot(iris, aes(x=Species, y=Petal.Width)) +
@@ -98,10 +105,8 @@ ggplot(iris, aes(x=Species, y=Petal.Width)) +
 # cases on 2 variables.
 str(PlantGrowth)
 
-# make a boxplot of weight versus group
+# make a boxplot of weight (y-axis) by group (x-axis)
 ggplot(PlantGrowth, aes(x=group, y=weight)) + geom_boxplot()
-
-
 
 
 # strip chart -------------------------------------------------------------
@@ -134,9 +139,9 @@ ggplot(chickwts, aes(x=feed, y=weight)) +
 
 # Your Turn!
 
-# Make a strip chart of the PlantGrowth data above. That is, plot weight (y)
-# versus group (x). Also add some 0.05 side-to-side jitter.
-ggplot(PlantGrowth, aes(x=group, y=weight)) + 
+# Make a boxplot/stripchart combination of the PlantGrowth data above. That is, 
+# plot weight (y) by group (x). Also jitter the points side-to-side with w=0.05.
+ggplot(PlantGrowth, aes(x=group, y=weight)) + geom_boxplot() +
   geom_point(position = position_jitter(w = 0.05, h = 0))
 
 
@@ -151,8 +156,11 @@ state.x77[1:6,]
 # it's a matrix, so we need to convert to a data frame
 class(state.x77)
 rownames(state.x77) # row names are the states
+
+# Convert matrix to data frame and states as a column
 states <- data.frame(state=rownames(state.x77),state.x77, row.names = NULL)
 head(states)
+class(states)
 
 # population dot plot
 ggplot(states, aes(x=Population, y=state)) + geom_point()
@@ -172,20 +180,40 @@ ggplot(states, aes(x=Area, y=reorder(state, Area))) +
   labs(title="Land Area of US States", y="State") 
 
 # Notice the x-axis tick marks. Let's fix that.
+
+# Recall that axes and legends are controlled by scales. To modify the x-axis we
+# need to use the scale_x_continuous() function. The scales package has some 
+# handy functions for formatting numbers, such as comma, dollar and percent.
+# Below we use the comma() function to format the labels on the x-axis.
+
+
 library(scales) # for comma() function
 ggplot(states, aes(x=Area, y=reorder(state, Area))) +
   geom_point() +
-  scale_x_continuous(breaks=pretty(range(states$Area)), 
-                     labels=comma(pretty(range(states$Area)))) +
+  scale_x_continuous(labels=comma) +
+  labs(title="Land Area of US States", y="State", x="Area (sq miles)") 
+
+# add breaks and labels for every 100,000 sq miles
+ggplot(states, aes(x=Area, y=reorder(state, Area))) +
+  geom_point() +
+  scale_x_continuous(breaks=seq(0,600000,100000), labels=comma) +
   labs(title="Land Area of US States", y="State", x="Area (sq miles)") 
 
 # Your Turn!
 
-# Make a dot plot for Illiteracy by State using the states data frame we
-# created. Also reorder the states by Illiteracy and label the y-axis
-ggplot(states, aes(x=Illiteracy, y=reorder(state, Illiteracy))) + geom_point() +
-  labs(y="State")
+# Our states data frame contains a column for Illiteracy, which was the percent 
+# of population that was illiterate in 1977. Make a dot plot for Illiteracy by 
+# State. Also reorder the states by Illiteracy and format the axis labels as 
+# percent (use the percent() function from the scales package.) Hint: divide
+# Illiteracy by 100 so the percents on the x-axis look right.
 
+ggplot(states, aes(x=Illiteracy/100, y=reorder(state, Illiteracy))) + geom_point() +
+  scale_x_continuous(labels=percent) +
+  labs(y="State")
+# or
+ggplot(states, aes(x=Illiteracy/100, y=reorder(state, Illiteracy))) + geom_point() +
+  scale_x_continuous(breaks=seq(0,0.03,0.005), labels=percent) +
+  labs(y="State")
 
 
 
@@ -231,18 +259,32 @@ ggplot(iris, aes(x=Petal.Length)) +
   geom_histogram(binwidth=0.2) +
   facet_grid(. ~ Species) 
 
+# use facet_wrap for "pretty" 1d wrapping
+ggplot(chickwts, aes(x=weight)) +
+  geom_histogram(binwidth=30) +
+  facet_wrap( ~ feed) 
+
+# compare to 
+ggplot(chickwts, aes(x=weight)) +
+  geom_histogram(binwidth=30) +
+  facet_grid(. ~ feed) 
+
 # Your Turn!
 
 # The airquality data set contains air quality measurements in New York, May to
 # September 1973.
 summary(airquality)
 
-# create a histogram for Temp faceted by Month. Suggested banwidth setting: 2
+# create a histogram for Temp faceted by Month. Suggested banwidth setting: 2. 
+# Use facet_wrap( ~ Month)
 ggplot(airquality, aes(x=Temp)) + geom_histogram(binwidth=2) +
-  facet_grid(.~ Month)
+  facet_wrap(~ Month)
 
 
 # line graph --------------------------------------------------------------
+
+# geom_line()
+# geom_line() with "group" aesthetic for lines within groups
 
 # Six subjects were given an intravenous injection of indometacin at 11 times,
 # and each time plasma concentrations of indometacin was measured.
@@ -250,15 +292,23 @@ ggplot(airquality, aes(x=Temp)) + geom_histogram(binwidth=2) +
 names(Indometh)
 summary(Indometh)
 
-# plot lines for for conc over time for each subject
+# plot lines for for conc over time for each subject; notice the "group"
+# aesthetic
 ggplot(Indometh, aes(x=time,y=conc, group=Subject)) +
   geom_line()
 
 # with color
-ggplot(Indometh, aes(x=time,y=conc,group=Subject, color=Subject)) +
+ggplot(Indometh, aes(x=time, y=conc, group=Subject, color=Subject)) +
   geom_line()
 
-# put legend in numeric order
+# Notice the legend is not in numeric order. That's because Subject is an
+# ordered factor.
+class(Indometh$Subject)
+levels(Indometh$Subject)
+
+# Remember that scales control legends. So to put the legend in numeric order we
+# need to use the scale_color_discrete() function. Simply set the limits to
+# range from 1 to 6.
 ggplot(Indometh, aes(x=time,y=conc,group=Subject, color=Subject)) +
   geom_line() +
   scale_color_discrete(limits=1:6)
@@ -267,17 +317,15 @@ ggplot(Indometh, aes(x=time,y=conc,group=Subject, color=Subject)) +
 # Your Turn!
 
 # The nlme package (that comes with R) has a dataset called Oxboys. These data 
-# contain the height of 26 boys from Oxford, England recorded over time (age).
-# Load the data and plot height (y) versus age (x) with each boy in a single
-# plot.
+# contain the height of 26 boys from Oxford, England recorded over time (age). 
+# Load the data and plot height (y) versus age (x) for each boy (Subject). Don't
+# worry about a legend.
 
 data(Oxboys, package = "nlme")
 summary(Oxboys)
 
-
 ggplot(Oxboys, aes(x=age,y=height, group=Subject)) +
-  geom_line()
-
+  geom_line() 
 
 
 # bar graph ---------------------------------------------------------------
@@ -290,92 +338,81 @@ ggplot(Oxboys, aes(x=age,y=height, group=Subject)) +
 
 # Let's do some examples of both scenarios.
 
-# Let's say you recruit 15 people to flip a loaded coin 100 times and record the
-# result for each flip. Here's one way to generate the data in R.
+# The following data are occurences of cougars in the US. It was downloaded from
+# Biodiversity Information Serving Our Nation (BISON),
+# http://bison.usgs.ornl.gov.
 
-# one record per flip per subject
-set.seed(1)
-result <- sample(c("H","T"), size = 15*100, replace = TRUE, prob = c(0.6,0.4))
-subject <- rep(1:15, each = 100)
-# recall: data must be in data frame for ggplot
-dat <- data.frame(result, subject)
-head(dat)
-dim(dat)
+url <- "http://people.virginia.edu/~jcf2d/workshops/ggplot2/bison-Cougar-20150520-172801.csv"
+cougar <- read.csv(url)
 
-# make a bar plot of counts for all heads and tails. Notice ggplot2
-# automatically tallies up the number of heads and tails. That's because
-# geom_bar() uses a default statistical transformation: stat="bin"
-ggplot(dat, aes(x=result)) + geom_bar()
-ggplot(dat, aes(x=result)) + geom_bar(width=0.5)
+# Basis of Record - the type of species occurrence or evidence upon which it is
+# based.
+summary(cougar$basisOfRecord)
 
+# Let's make a bar graph of that.
+ggplot(cougar, aes(x=basisOfRecord)) + geom_bar()
 
-# make a bar plot of counts for each subject
-ggplot(dat, aes(x=subject, fill=result)) + geom_bar()
-# set bars next to each other:
-ggplot(dat, aes(x=subject, fill=result)) + geom_bar(position="dodge")
+# Easy enough because our data set has one record per occurence.
 
-# defaults don't work so great; can fix with scale_x_discrete: set breaks at 1 -
-# 15, label each break 1 - 15, and set the limits of the x-axis to go from "1"
-# to "15".
-ggplot(dat, aes(x=subject, fill=result)) + geom_bar(position="dodge") +
-  scale_x_discrete(breaks=1:15, labels=1:15, limits=as.character(1:15))
+# What if the data was aggregated, like so:
+cougar2 <- as.data.frame(xtabs(~ basisOfRecord, data=cougar))
+cougar2
 
-# using faceting
-ggplot(dat, aes(x=result, fill=result)) + geom_bar(width=0.5) + 
-  facet_wrap(~ subject)
-# no need for legend; remove using + guides(fill=FALSE)
-ggplot(dat, aes(x=result, fill=result)) + geom_bar(width=0.5) + 
-  facet_wrap(~ subject) + guides(fill=FALSE)
+# now try ggplot with geom_bar()
+ggplot(cougar2, aes(x=basisOfRecord)) + geom_bar()
+# it counted one record each! Not what we wanted.
 
-# Now let's say you recruit 15 people to flip a loaded coin 100 times and record the
-# result for each subject, that is total heads and tails.
+# We need to change the statistical transformation to stat="identity" and
+# specify a y-axis aesthetic.
+ggplot(cougar2, aes(x=basisOfRecord, y=Freq)) + geom_bar(stat="identity")
 
-# one record per total count per subject
-dat2 <- as.data.frame(table(subject,result))
-head(dat2)
+# Notice we could use a dot plot for this graph
+ggplot(cougar2, aes(x=Freq, y=basisOfRecord)) + 
+  geom_point()
 
-# have to use stat="identity" since we already have total counts
-ggplot(dat2, aes(x=subject, y=Freq, fill=result)) + 
-  geom_bar(stat="identity", position="dodge")
+# Perhaps add a line from the y-axis to the point.
+ggplot(cougar2, aes(x=Freq, y=basisOfRecord)) + 
+  geom_point() +
+  geom_segment(aes(yend = basisOfRecord), xend = 0)  +
+  labs(y="Basis of Record")
 
-# how to make bar graph of total heads and tails:
-# first have to find total and save as data frame
-dat3 <- aggregate(Freq ~ result, data=dat2, sum)
-dat3
-ggplot(dat3, aes(x=result, y=Freq)) + geom_bar(stat="identity", width=0.5)
 
 
 # Your turn!
 
-# Look at the mtcars data frame. The data was extracted from the 1974 Motor 
-# Trend US magazine. Make a bar graph for total count of Transmission type (am =
-# 0 or 1). Hint: consider making am a factor.
-str(mtcars)
+# Using the cougar data set, create a bar chart of occurences by providedState. 
+# Recall each record is an occurence so we just need to make a bar chart of 
+# providedState. Hint: add + coord_flip() to rotate your chart and make it look
+# nicer.
 
-ggplot(mtcars, aes(x=am)) + geom_bar()
-ggplot(mtcars, aes(x=factor(am))) + geom_bar(width=0.5)
+ggplot(cougar, aes(x=providedState)) + geom_bar() + coord_flip()
 
 
 
 # Advanced Topics ---------------------------------------------------------
 
-# multiple geoms
-
-# adding fitted regression lines with CI and save
+# saving ggplot graphs
 p <- ggplot(iris, aes(x = Petal.Width, y = Petal.Length, color=Species)) + 
-  geom_point() +
-  geom_smooth(method="lm") + 
-  ggtitle("Petals of the Iris data set") 
-p  
+  geom_point()
+
+p
+summary(p)
+
+# add geoms to saved graph; handy for interactive use; saves typing
+
+p + geom_smooth(method="lm")  
+p + geom_smooth(method="lm", se=F)   
+p + geom_smooth(method="lm", formula = y ~ poly(x, 3))
+p + geom_point(aes(size=Sepal.Width))
 
 # "zoom in" on plot with coord_cartesian()
-p + coord_cartesian(xlim=c(0,0.75), ylim = c(0, 2))
+p + geom_smooth(method="lm", se=F) +
+  coord_cartesian(xlim=c(1,2), ylim = c(3, 5))
 
 
 # add mean to boxplots
 
 # add mean to iris box plots
-# notice we can save a ggplot and then call it
 bp <- ggplot(iris, aes(x=Species, y=Petal.Width)) + geom_boxplot(width=0.5)
 bp
 # now add means to the plot using stat_summary():
@@ -432,6 +469,15 @@ ggplot(iris, aes(x=Petal.Length, fill=Species)) +
 # position="identity" needed for overlapping; without they get stacked;
 # alpha = transparency setting
 
+# maps
+library(maps)
+states <- map_data("state")
+cougar$region <- tolower(cougar$providedState)
+cougmap <- merge(states, subset(cougar, !is.na(decimalLongitude)), by = "region")
+
+ggplot(cougmap, aes(long, lat)) +
+  borders("state") +
+  geom_point(aes(x = decimalLongitude, y=decimalLatitude, color=basisOfRecord))
 
 # saving
 
@@ -460,6 +506,51 @@ ggplot(airquality, aes(x=Temp, y=Ozone, color=factor(Month))) + geom_point() +
 ggplot(airquality, aes(x=Temp, y=Ozone, color=factor(Month))) + geom_point() +
   scale_color_discrete(name = "Month", labels=month.name[5:9]) +
   theme_bw()
+
+# Themes
+
+# Using built-in themes such as theme_bw()
+# Before
+ggplot(airquality, aes(x=Temp)) + geom_histogram(binwidth=2) +
+  facet_wrap(~Month)
+# After
+ggplot(airquality, aes(x=Temp)) + geom_histogram(binwidth=2) +
+  facet_wrap(~Month) + theme_bw()
+
+# To permanently change the theme:
+prevTheme <- theme_set(theme_bw())
+
+ggplot(airquality, aes(x=Temp)) + geom_histogram(binwidth=2) +
+  facet_wrap(~Month)
+
+ggplot(airquality, aes(x=Temp)) + geom_freqpoly(binwidth=2) +
+  facet_wrap(~Month)
+
+# To restore
+theme_set(prevTheme)
+# verify
+ggplot(airquality, aes(x=Temp)) + geom_freqpoly(binwidth=2) +
+  facet_wrap(~Month)
+
+
+# Multiple plots in one window
+
+# In base R, we usually use par(mfrow=c(i,j)), like so:
+par(mfrow=c(1,2))
+hist(airquality$Temp, main="Distribution of Temp", xlab="Temp")
+plot(Ozone ~ Temp, data=airquality, main="Ozone vs. Temp")
+par(mfrow=c(1,1))
+
+# We cannot use this approach for ggplot2. The easiest solution is to use the 
+# grid.arrange() function in the gridExtra package. To use it, you have to save
+# your plots and then call them using grid.arrange().
+
+p1 <- ggplot(airquality, aes(x=Temp)) + geom_histogram(binwidth=4.5) + 
+  labs(title="Distribution of Temp")
+p2 <- ggplot(airquality, aes(x=Temp, y=Ozone)) + geom_point() +
+  labs(title="Ozone vs. Temp")
+library(gridExtra)
+grid.arrange(p1, p2, nrow=1) # can also use ncol
 
 
 # help(RColorBrewer) for different palettes 

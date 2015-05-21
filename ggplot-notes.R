@@ -406,3 +406,114 @@ ggplot(jsp, aes(x=raven, y=math)) + geom_jitter() + facet_grid(~ social)
 
 ggplot(jsp, aes(x=raven, y=math)) + geom_jitter() + facet_grid(~ social) +
   geom_smooth()
+
+# ch 9 - manipulating data
+
+library(plyr); library(dplyr) # always load in this order if you need both
+
+# select smallest diamond in each color
+ddply(diamonds, .(color), subset, carat == min(carat))
+
+diamonds %>%
+  group_by(color) %>%
+  filter(carat == min(carat)) %>%
+  arrange(color)
+
+# select the two smallest diamonds
+ddply(diamonds, .(color), subset, order(carat) <= 2)
+
+diamonds %>%
+  group_by(color) %>%
+  filter(order(carat) <= 2) %>%
+  arrange(color)
+
+# select the 1% largest diamonds in each group
+ddply(diamonds, .(color), subset, carat > quantile(carat, 0.99))
+
+diamonds %>%
+  group_by(color) %>%
+  filter(carat > quantile(carat, 0.99)) %>%
+  arrange(color)
+
+# select all diamonds bigger than the group average
+ddply(diamonds, .(color), subset, price > mean(price))
+
+diamonds %>%
+  group_by(color) %>%
+  filter(price > mean(price)) %>%
+  arrange(color)
+
+# within each color, scale price to mean 0 and variance 1
+head(ddply(diamonds, .(color), transform, price = scale(price)))
+
+diamonds %>%
+  group_by(color) %>%
+  mutate(price = scale(price)) %>%
+  arrange(color)
+
+# subtract off group mean
+head(ddply(diamonds, .(color), transform, price = price - mean(price)))
+
+diamonds %>%
+  group_by(color) %>%
+  mutate(price = price - mean(price)) %>%
+  arrange(color)
+
+# apply a function to every column in a data frame
+nmissing <- function(x) sum(is.na(x))
+nmissing(msleep$name)
+nmissing(msleep$brainwt)
+
+nmissing_df <- colwise(nmissing)
+nmissing_df(msleep)
+# this is shorthand for previous two steps
+colwise(nmissing)(msleep)
+
+msleep2 <- msleep[, -6]
+numcolwise(median)(msleep2, na.rm = TRUE)
+numcolwise(quantile)(msleep2, na.rm = TRUE)
+numcolwise(quantile)(msleep2, probs = c(0.25, 0.75), na.rm = TRUE)
+
+# combined with ddply for per-group summaries
+ddply(msleep2, .(vore), numcolwise(median), na.rm=T)
+ddply(msleep2, .(vore), numcolwise(mean), na.rm=T)
+
+my_summary <- function(df) {
+  with(df, data.frame(
+    pc_cor = cor(price, carat, method = "spearman"),
+    lpc_cor = cor(log(price), log(carat))
+    ))
+}
+ddply(diamonds, .(cut), my_summary)
+ddply(diamonds, .(color), my_summary)
+
+diamonds %>%
+  group_by(cut) %>%
+  summarise(pc_cor = cor(price, carat, method = "spearman"),
+            lpc_cor = cor(log(price), log(carat)))
+
+diamonds %>%
+  group_by(color) %>%
+  summarise(pc_cor = cor(price, carat, method = "spearman"),
+            lpc_cor = cor(log(price), log(carat)))
+
+# multiple time series
+library(reshape2)
+emp  <- melt(economics, id.vars = "date", measure.vars = c("unemploy","uempmed"))
+ggplot(emp, aes(x=date, y=value)) + geom_line() + facet_grid(variable ~ ., scales = "free_y")
+
+# fortify
+mpgmod <- lm(cty ~ displ, data = mpg)
+fortify(mpgmod)
+
+basic <- ggplot(mpgmod, aes(.fitted, .resid)) +
+  geom_hline(yintercept = 0, colour = "grey50", size = 0.5) +
+  geom_point() +
+  geom_smooth(size = 0.5, se=F)
+basic
+basic + aes(y = .stdresid)
+basic + aes(size = .cooksd) + scale_size_area("Cook's distance")
+
+full <- basic %+% fortify(mpgmod, mpg)
+full + aes(colour = factor(cyl))
+full + aes(displ, colour = factor(cyl))
