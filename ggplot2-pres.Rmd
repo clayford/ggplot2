@@ -136,6 +136,15 @@ ggplot(iris, aes(x = Petal.Width)) +
   geom_histogram(binwidth=0.2) + facet_wrap(~ Species) 
 ```
 
+## ggplot example - adding a statistical transformation
+
+```{r, message=FALSE, fig.height=3, fig.width=6}
+ggplot(iris, aes(x = Species, y=Petal.Width)) +
+  geom_boxplot() + 
+  stat_summary(fun.y = mean, geom="point", color="red")
+```
+
+
 ## ggplot2 - points to remember
 
 - Can do a lot with `ggplot(data, aes()) + geom_xxx()`!

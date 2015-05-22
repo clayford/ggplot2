@@ -20,7 +20,8 @@
 install.packages("ggplot2")
 install.packages("reshape2")
 install.packages("scales")
-install.packages("RColorBrewer")
+install.packages("maps")
+install.packages("mapproj")
 
 library(ggplot2)
 
@@ -313,6 +314,37 @@ ggplot(Indometh, aes(x=time,y=conc,group=Subject, color=Subject)) +
   geom_line() +
   scale_color_discrete(limits=1:6)
 
+# Let's do a quick example of reshaping data and using line graphs with faceting
+head(airquality,3)
+
+# Let's reshape airquality so there's one record per day per measure. The melt()
+# function from the reshape2 package makes this pretty easy.
+
+# First make a copy of airquality
+aq <- airquality
+
+# Next combine the Day and Month columns into one column called date
+aq$date <- as.Date(paste("1973",aq$Month, aq$Day,sep="-"))
+# Then drop Month and Day columns since we don't need them
+aq$Month <- aq$Day <- NULL 
+head(aq, 3)
+
+# now we melt the data, ie make it Long. id.vars = "date" means that's the 
+# column that remains and identifies a record. The remaining columns are
+# "melted".
+aqLong <- melt(aq, id.vars = "date")
+head(aqLong)
+
+# now we can make line graphs for each value vs. date faceted by variable
+ggplot(aqLong, aes(x=date, y=value)) + geom_line() + 
+  facet_wrap( ~ variable)
+
+# Notice all four variables are sharing the same size scale. It's probably 
+# better to allow the y-axis to vary. The scales = "free_y" argument allows us
+# to do that.
+ggplot(aqLong, aes(x=date, y=value)) + geom_line() + 
+  facet_wrap( ~ variable, scales = "free_y")
+
 
 # Your Turn!
 
@@ -396,7 +428,6 @@ p <- ggplot(iris, aes(x = Petal.Width, y = Petal.Length, color=Species)) +
   geom_point()
 
 p
-summary(p)
 
 # add geoms to saved graph; handy for interactive use; saves typing
 
@@ -424,7 +455,7 @@ bp + stat_summary(fun.y = mean, geom="point", color="red", size=3)
 fMean <- tapply(chickwts$weight, chickwts$feed, mean)
 fSE <- tapply(chickwts$weight, chickwts$feed, function(x) sd(x)/sqrt(length(x)))
 # now create data frame; recall that ggplot requires data frame
-chick2 <- data.frame(feed=names(fMean), fMean, fSE)
+chick2 <- data.frame(feed=names(fMean), fMean, fSE, row.names = NULL)
 
 # now plot strip chart and error bars
 # notice we call two data frames
@@ -437,33 +468,44 @@ sc + geom_point(data=chick2, aes(x=feed, y=fMean), color="red", size=3) +
   geom_errorbar(data=chick2, aes(x=feed, y=fMean, 
                                  ymin=fMean - 2*fSE, 
                                  ymax=fMean + 2*fSE), 
-                width=0.1)
+                width=0.1, color="red")
 
-# another way using stat_summary
+# another way using stat_summary; fun.data="mean_cl_normal" actually calls the 
+# function smean.cl.normal() from the Hmisc package. It uses the t distribution
+# to determine the multiplier of the standard error.
 ggplot(chickwts, aes(x=feed, y=weight)) + 
   geom_point(position = position_jitter(w = 0.1, h = 0)) +
-  stat_summary(fun.data="mean_cl_normal", colour="red", geom="errorbar", width=0.2) +
+  stat_summary(fun.data="mean_cl_normal", color="red", geom="errorbar", width=0.1) +
   stat_summary(fun.y = mean, geom="point", color="red", size=3)
 
 
 # single line graph of means at each time point with SE bars
+
+# Recall this plot:
+ggplot(Indometh, aes(x=time,y=conc, group=Subject)) +
+  geom_line()
+
+# Let's say we wanted to create a single line graph of means at each time point
+# with SE bars.
 
 # first calculate means and SEs
 tMean <- tapply(Indometh$conc, Indometh$time, mean)
 tSE <- tapply(Indometh$conc, Indometh$time, function(x)sd(x)/sqrt(length(x)))
 
 # ggplot requires data in data frame
-Indo2 <- data.frame(time=unique(Indometh$time), tMean, tSE)
+Indo2 <- data.frame(time=unique(Indometh$time), tMean, tSE, row.names = NULL)
 
 # now ready to create plot
 ggplot(Indo2, aes(x=time,y=tMean)) +
   geom_line() +
-  geom_point(size=2) +
-  geom_errorbar(aes(ymin=tMean-2*tSE, ymax=tMean+2*tSE), width=0.2)
+  geom_errorbar(aes(ymin=tMean-2*tSE, ymax=tMean+2*tSE), width=0.1)
 
+# or again we can use stat_summary()
+ggplot(Indometh, aes(x=time,y=conc)) +
+  stat_summary(fun.data="mean_cl_normal", geom="errorbar", width=0.1) +
+  stat_summary(fun.y = mean, geom="line")
 
 # overlayed histograms with transparency
-
 ggplot(iris, aes(x=Petal.Length, fill=Species)) +
   geom_histogram(position="identity", alpha=0.4, binwidth=.1) 
 # position="identity" needed for overlapping; without they get stacked;
@@ -471,15 +513,21 @@ ggplot(iris, aes(x=Petal.Length, fill=Species)) +
 
 # maps
 library(maps)
+library(mapproj) # for the "ployconic" option
+
 states <- map_data("state")
 cougar$region <- tolower(cougar$providedState)
 cougmap <- merge(states, subset(cougar, !is.na(decimalLongitude)), by = "region")
 
 ggplot(cougmap, aes(long, lat)) +
   borders("state") +
-  geom_point(aes(x = decimalLongitude, y=decimalLatitude, color=basisOfRecord))
+  geom_point(aes(x = decimalLongitude, y=decimalLatitude, color=basisOfRecord)) +
+  coord_map("polyconic")
 
-# saving
+# saving graphs as images
+
+# use ggsave(). It saves the last plot according to your file extension.
+ggsave("cougars.jpg", width=10, height=5)
 
 
 
@@ -502,10 +550,6 @@ ggplot(airquality, aes(x=Temp, y=Ozone, color=factor(Month))) + geom_point() +
   scale_color_discrete(name = "Month", labels=month.name[5:9])
 
 
-# get rid of gray background
-ggplot(airquality, aes(x=Temp, y=Ozone, color=factor(Month))) + geom_point() +
-  scale_color_discrete(name = "Month", labels=month.name[5:9]) +
-  theme_bw()
 
 # Themes
 
@@ -553,22 +597,4 @@ library(gridExtra)
 grid.arrange(p1, p2, nrow=1) # can also use ncol
 
 
-# help(RColorBrewer) for different palettes 
-
-# others to try: 
-# SEQUENTIAL PALETTES (suited to ordered data that progress from low to high): 
-# Blues BuGn BuPu GnBu Greens Greys Oranges OrRd PuBu PuBuGn PuRd Purples RdPu
-# Reds YlGn YlGnBu YlOrBr YlOrRd
-
-# DIVERGING PALETTES (equal emphasis on mid-range critical values and extremes):
-# BrBG PiYG PRGn PuOr RdBu RdGy RdYlBu RdYlGn Spectral
-
-# QUALITATIVE PALETTES (used to create the primary visual differences between classes):
-# Accent Dark2 Paired Pastel1 Pastel2 Set1 Set2 Set3
-
-# See the online help for ggplot2; full of examples
-# Electronic version of R Graphics Cookbook available from UVa Library
-
-# tidy up before moving on
-rm(list=ls())
 
