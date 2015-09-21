@@ -1,6 +1,6 @@
 # R Graphics with ggplot2
 # Fall 2015
-# StatLab@UVa Library
+# UVa StatLab
 # Clay Ford
 
 
@@ -16,7 +16,7 @@
 # Packages ----------------------------------------------------------------
 
 # we'll use the following packages today.
-# only submit these lines if you don't already have them installed. 
+# only submit these lines if you don't already have these packages installed. 
 install.packages("ggplot2")
 install.packages("reshape2")
 install.packages("scales")
@@ -31,11 +31,14 @@ library(ggplot2)
 # the measurements (in cm) of the variables sepal length and width and petal
 # length and width, respectively, for 50 flowers from each of 3 species of iris.
 
-# geom_point() 
+head(iris)
+summary(iris)
+
+# scatterplot of petal width and length
 ggplot(iris, aes(x = Petal.Width, y = Petal.Length)) + 
   geom_point() 
 
-# scatter plot by group
+# scatterplot by group
 # add color=Species to aes()
 ggplot(iris, aes(x = Petal.Width, y = Petal.Length, color=Species)) + 
   geom_point() 
@@ -54,7 +57,9 @@ ggplot(iris, aes(x = Petal.Width, y = Petal.Length,
 ggplot(iris, aes(x = Petal.Width, y = Petal.Length, 
                  color=Species, shape=Species)) + 
   geom_point(size=3) +
-  geom_smooth(method="lm") # have to specify method="lm" for straight regression lines
+  geom_smooth(method="lm") 
+# have to specify method="lm" for straight regression lines
+# lm = linear model; refers to lm() function
 
 # mapping species to color and Sepal.Length to size of dots, aka a bubblechart
 ggplot(iris, aes(x = Petal.Width, y = Petal.Length, 
@@ -74,13 +79,13 @@ ggplot(iris, aes(x = Petal.Width, y = Petal.Length,
 # versus substrate concentration in an enzymatic reaction involving untreated
 # cells or cells treated with Puromycin.
 head(Puromycin)
-names(Puromycin)
+summary(Puromycin)
 
 # Create a scatterplot. Plot conc on the x-axis, rate on the y-axis, and map
-# the color of the points to state.
+# the color of the points to state. Try adding geom_smooth().
 ggplot(Puromycin, aes(x=conc,y=rate, color=state)) + geom_point()
 ggplot(Puromycin, aes(x=conc,y=rate, color=state)) + geom_point() +
-  geom_smooth(se=F)
+  geom_smooth()
 
 
 # boxplots ----------------------------------------------------------------
@@ -94,17 +99,16 @@ ggplot(iris, aes(x=Species, y=Petal.Width)) +
 # the "whiskers" extend to the farthest point that is less than 1.5 x IQR from
 # the edge of the box.
 
-
-# thinner boxes
+# thinner boxes and bigger, colorful outliers
 ggplot(iris, aes(x=Species, y=Petal.Width)) +
-  geom_boxplot(width=0.5)
+  geom_boxplot(width=0.5, outlier.size = 3, outlier.colour = "red")
 
 
 # Your Turn!
 
 # PlantGrowth: Results from an Experiment on Plant Growth. A data frame of 30
 # cases on 2 variables.
-str(PlantGrowth)
+summary(PlantGrowth)
 
 # make a boxplot of weight (y-axis) by group (x-axis)
 ggplot(PlantGrowth, aes(x=group, y=weight)) + geom_boxplot()
@@ -117,7 +121,7 @@ ggplot(PlantGrowth, aes(x=group, y=weight)) + geom_boxplot()
 
 # An experiment was conducted to measure and compare the effectiveness of
 # various feed supplements on the growth rate of chickens.
-head(chickwts)
+summary(chickwts)
 str(chickwts)
 
 # could do a boxplot:
@@ -141,9 +145,10 @@ ggplot(chickwts, aes(x=feed, y=weight)) +
 # Your Turn!
 
 # Make a boxplot/stripchart combination of the PlantGrowth data above. That is, 
-# plot weight (y) by group (x). Also jitter the points side-to-side with w=0.05.
+# plot weight (y) by group (x). Also jitter the points side-to-side with w=0.02.
+names(PlantGrowth)
 ggplot(PlantGrowth, aes(x=group, y=weight)) + geom_boxplot() +
-  geom_point(position = position_jitter(w = 0.05, h = 0))
+  geom_point(position = position_jitter(w = 0.02, h = 0))
 
 
 
@@ -158,7 +163,7 @@ state.x77[1:6,]
 class(state.x77)
 rownames(state.x77) # row names are the states
 
-# Convert matrix to data frame and states as a column
+# Convert matrix to data frame and add states as a column
 states <- data.frame(state=rownames(state.x77),state.x77, row.names = NULL)
 head(states)
 class(states)
@@ -172,7 +177,7 @@ ggplot(states, aes(x=Population, y=state)) + geom_point()
 # We can use the reorder() function within ggplot to reorder states according to
 # population.
 ggplot(states, aes(x=Population, y=reorder(state, Population))) +
-  geom_point(size=3) +
+  geom_point() +
   labs(title="Population of US States in 1975", y="State") 
 
 # area dot plot
@@ -186,7 +191,6 @@ ggplot(states, aes(x=Area, y=reorder(state, Area))) +
 # need to use the scale_x_continuous() function. The scales package has some 
 # handy functions for formatting numbers, such as comma, dollar and percent.
 # Below we use the comma() function to format the labels on the x-axis.
-
 
 library(scales) # for comma() function
 ggplot(states, aes(x=Area, y=reorder(state, Area))) +
@@ -205,12 +209,15 @@ ggplot(states, aes(x=Area, y=reorder(state, Area))) +
 # Our states data frame contains a column for Illiteracy, which was the percent 
 # of population that was illiterate in 1977. Make a dot plot for Illiteracy by 
 # State. Also reorder the states by Illiteracy and format the axis labels as 
-# percent (use the percent() function from the scales package.) Hint: divide
-# Illiteracy by 100 so the percents on the x-axis look right.
+# percent (use the percent() function from the scales package.) Hint: divide 
+# Illiteracy by 100 so the percents on the x-axis look right when using the
+# percent() function.
+
+ggplot(states, aes(x=Illiteracy, y=reorder(state, Illiteracy))) + geom_point() +
+  scale_x_continuous(labels=percent)
 
 ggplot(states, aes(x=Illiteracy/100, y=reorder(state, Illiteracy))) + geom_point() +
-  scale_x_continuous(labels=percent) +
-  labs(y="State")
+  scale_x_continuous(labels=percent) 
 # or
 ggplot(states, aes(x=Illiteracy/100, y=reorder(state, Illiteracy))) + geom_point() +
   scale_x_continuous(breaks=seq(0,0.03,0.005), labels=percent) +
@@ -227,26 +234,35 @@ ggplot(states, aes(x=Illiteracy/100, y=reorder(state, Illiteracy))) + geom_point
 # in Yellowstone National Park, Wyoming, USA.
 
 head(faithful)
+summary(faithful)
+ggplot(faithful, aes(x=eruptions, y=waiting)) + geom_point()
 
 # histogram of eruption times; by default the y axis displays counts in the
 # histogram bins.
 ggplot(faithful, aes(x=eruptions)) +
   geom_histogram()
 # note the warnings; developer firmly believes you should not accept default
-# binwidth. use the binwdith argument to change
+# binwidth. use the binwdith argument to change.
 
-# with different color bars and banwidth set to 0.1
+# what bandwidth was used? range/30
+bw <- diff(range(faithful$eruptions))/30
+bw
+
 ggplot(faithful, aes(x=eruptions)) +
-  geom_histogram(fill="white", color="black", binwidth=0.1) 
+  geom_histogram(binwidth=bw) 
+
+# with different color bars and banwidth set to 0.05
+ggplot(faithful, aes(x=eruptions)) +
+  geom_histogram(fill="white", color="black", binwidth=0.05) 
 
 # "true" histogram - density instead of counts
 # ..density.. refers to a variable generated by geom_histogram
 ggplot(faithful, aes(x=eruptions, y = ..density..)) +
-  geom_histogram()
+  geom_histogram(binwidth=0.12)
 
 # with a density curve
 ggplot(faithful, aes(x=eruptions, y = ..density..)) +
-  geom_histogram(binwidth=0.1) +
+  geom_histogram(binwidth=0.12) +
   geom_density(color="blue")
 
 # back to iris data
@@ -284,7 +300,6 @@ ggplot(airquality, aes(x=Temp)) + geom_histogram(binwidth=2) +
 
 # line graph --------------------------------------------------------------
 
-# geom_line()
 # geom_line() with "group" aesthetic for lines within groups
 
 # Six subjects were given an intravenous injection of indometacin at 11 times,
@@ -350,9 +365,8 @@ ggplot(aqLong, aes(x=date, y=value)) + geom_line() +
 
 # The nlme package (that comes with R) has a dataset called Oxboys. These data 
 # contain the height of 26 boys from Oxford, England recorded over time (age). 
-# Load the data and plot height (y) versus age (x) for each boy (Subject). Don't
-# worry about a legend.
-
+# Load the data and plot height (y) versus standardized age (x) for each boy
+# (Subject). Don't worry about a legend.
 data(Oxboys, package = "nlme")
 summary(Oxboys)
 
@@ -402,10 +416,10 @@ ggplot(cougar2, aes(x=basisOfRecord, y=Freq)) + geom_bar(stat="identity")
 ggplot(cougar2, aes(x=Freq, y=basisOfRecord)) + 
   geom_point()
 
-# Perhaps add a line from the y-axis to the point.
+# Perhaps add a line from the point to the y-axis.
 ggplot(cougar2, aes(x=Freq, y=basisOfRecord)) + 
   geom_point() +
-  geom_segment(aes(yend = basisOfRecord), xend = 0)  +
+  geom_segment(aes(xend = 0, yend = basisOfRecord))  +
   labs(y="Basis of Record")
 
 
@@ -464,19 +478,20 @@ sc <- ggplot(chickwts, aes(x=feed, y=weight)) +
 sc
 
 # now add mean and error bars
-sc + geom_point(data=chick2, aes(x=feed, y=fMean), color="red", size=3) +
+sc + geom_point(data=chick2, aes(x=feed, y=fMean), color="#0D3268", size=3) +
   geom_errorbar(data=chick2, aes(x=feed, y=fMean, 
                                  ymin=fMean - 2*fSE, 
                                  ymax=fMean + 2*fSE), 
-                width=0.1, color="red")
+                width=0.1, color="#F59A2C") +
+  labs(title="Mean Weight by Feed Type with 2*SE Bars")
 
 # another way using stat_summary; fun.data="mean_cl_normal" actually calls the 
 # function smean.cl.normal() from the Hmisc package. It uses the t distribution
 # to determine the multiplier of the standard error.
 ggplot(chickwts, aes(x=feed, y=weight)) + 
   geom_point(position = position_jitter(w = 0.1, h = 0)) +
-  stat_summary(fun.data="mean_cl_normal", color="red", geom="errorbar", width=0.1) +
-  stat_summary(fun.y = mean, geom="point", color="red", size=3)
+  stat_summary(fun.data="mean_cl_normal", color="#F59A2C", geom="errorbar", width=0.1) +
+  stat_summary(fun.y = mean, geom="point", color="#0D3268", size=3)
 
 
 # single line graph of means at each time point with SE bars

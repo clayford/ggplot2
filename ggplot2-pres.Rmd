@@ -12,7 +12,14 @@ output: beamer_presentation
 - fine tuning graphs
 - common manipulation tasks to get your data ready for ggplot2
 
+## Getting Started
 
+- ggplot2 is an R package that has to be installed:   
+  `install.packages("ggplot2")`
+  
+- Once installed, you need to load it once per R session if you want to use it:   
+  `library(ggplot2)`
+  
 ## The ggplot2 philosophy
 
 - ggplot2 is based on the *Grammar of Graphics*, a book by Leland Wilkinson
@@ -25,56 +32,46 @@ There's an entire book on this, but I'll attempt to boil it down to one slide (*
 
 - A statistical graphic is a mapping from data to aesthetic attributes (location, color, shape, size) of geometric objects (points, lines, bars). 
 
-- Scales control the mapping from data to aesthetic and provide tools to read the plot (ie, axes and legends).
+- Scales control the mapping from data to aesthetics and provide tools to read the plot (ie, axes and legends).
 
 - The geometric objects are drawn in a specific coordinate system.
 
-- The plot may also contain statistical transformations of the data (means, medians, bins of data).
+- The plot may also contain statistical transformations of the data (means, medians, bins of data, trend lines).
 
 - Faceting can be used to generate the same plot for different subsets of the data.
 
 
-## Getting Started
+## Basic ggplot2 structure
 
-- ggplot2 is an R package that has to be installed:   
-  `install.packages("ggplot2")`
-  
-- Once installed, you need to load it once per R session if you want to use it:   
-  `library(ggplot2)`
+**Specify data, aesthetics and geometric shapes** 
 
-- Graphs are created with ggplot2 by layering (or adding) functions. You actually use a `+` symbol between functions.  
-Example:  
-`ggplot(data=vitals, aes(x=weight, y=height)) + geom_point()`  
-This creates a scatterplot of height vs. weight.
-
-## Basic ggplot structure
-
-**Specify data and aesthetics**   
 `ggplot(data, aes(x=, y=, color=, shape=, size=)) +`   
+`geom_point()`, or `geom_histogram()`, or `geom_boxplot()`, etc.   
 
-**Specify geometric shape(s)**  
-`geom_xxxxx()`   
+- This combination is very effective for exploratory graphs. 
 
-This combination is very effective for exploratory graphs. You can also add multiple geoms.
+- The data must be a data frame.
 
-Every `geom_*()` function has a default statistical transformation and scale, which can be modified with `stat_*()` and `scale_*()` functions.
+- The `aes()` function maps columns of the data frame to aesthetic properties of geometric shapes to be plotted.
 
-## Extending ggplot graphs
+- Some examples should make this clear
 
-We can extend and/or tweak ggplot graphs using the following functions:
+## The iris data set
 
-**Specify statistical, scale or coordinate changes**   
-`stat_xxxx() +` or `scale_xxxx() +` or `coord_xxxx() +`   
+This is a famous data set from 1936, courtesy of R.A. Fisher, that comes with R and is excellent for demonstrating ggplot2.
 
-**Specify how to layout graphs of subsetted data**   
-`facet_xxxx() +`   
+```{r}
+str(iris)
+```
 
-**Specify themes and labels**   
-`theme_xxxx() + labs(title=, x=, y=)`
+## An iris
 
-Notice the `+` signs. We add, or layer, these specifications to `ggplot()`
+![alt text](iris_petal_sepal.jpg)
 
-## ggplot example - basic
+sebastianraschka.com/Images_old/2014_python_lda/
+
+
+## ggplot2 example - scatter plot coded by species
 
 ```{r, message=FALSE, fig.height=3, fig.width=6}
 library(ggplot2) # once per session
@@ -83,7 +80,139 @@ ggplot(iris, aes(x = Petal.Width, y = Sepal.Width,
   geom_point() 
 ```
 
-## ggplot example - update labels
+
+## ggplot2 example - scatter plot coded by species
+
+```{r, message=FALSE, fig.height=3, fig.width=6}
+ggplot(iris, aes(x = Petal.Width, y = Sepal.Width, 
+                 color=Species, shape=Species)) + 
+  geom_point() 
+```
+
+
+## ggplot2 example - scatter plot coded by species, size by Petal.Length
+
+```{r, message=FALSE, fig.height=3, fig.width=6}
+ggplot(iris, aes(x = Petal.Width, y = Sepal.Width, 
+                 color = Species, size = Petal.Length)) + 
+  geom_point() 
+```
+
+## ggplot2 example - add multiple geoms (points and smooth line)
+
+```{r, message=FALSE, fig.height=3, fig.width=6}
+ggplot(iris, aes(x = Petal.Width, y = Sepal.Width, 
+                 color=Species)) + 
+  geom_point() + geom_smooth(method="lm")
+```
+
+## ggplot2 example - add multiple geoms (boxplot and points)
+
+```{r, message=FALSE, fig.height=3, fig.width=6}
+ggplot(iris, aes(x = Species, y = Sepal.Width)) + 
+  geom_boxplot() + geom_point()
+```
+
+
+## Moving beyond geoms
+
+A natural next step in exploratory graphing is to create plots of subsets of data. These are called facets in ggplot2.
+
+Use `facet_wrap()` if you want to facet by one variable. 
+
+Use `facet_grid()` if you want to facet by one and/or two variables
+
+## ggplot2 example - `facet_wrap` (common scales)
+```{r, message=FALSE, fig.height=3, fig.width=6}
+ggplot(iris, aes(x = Petal.Width, y = Sepal.Width)) + 
+  geom_point() + geom_smooth(method="lm") +
+  facet_wrap(~ Species)
+
+```
+
+## ggplot2 example - `facet_wrap` (free x scales)
+```{r, message=FALSE, fig.height=3, fig.width=6}
+ggplot(iris, aes(x = Petal.Width, y = Sepal.Width)) + 
+  geom_point() + geom_smooth(method="lm") +
+  facet_wrap(~ Species, scales = "free_x")
+
+```
+
+
+## ggplot2 example - `facet_grid` (histograms)
+
+```{r, message=FALSE, fig.height=3, fig.width=6}
+ggplot(iris, aes(x = Petal.Width)) +
+  geom_histogram(binwidth=0.2) + facet_grid(Species ~ .) 
+```
+
+## Customizing scales
+
+Scales control the mapping from data to aesthetics and provide tools to read the plot (ie, axes and legends).
+
+Every aesthetic has a default scale. To add or modify a scale, use a `scale` function. 
+
+All scale functions have a common naming scheme: `scale_`, followed by the name of the aesthetic (`y_`), followed by the name of the scale (`continuous`).
+
+Examples: `scale_y_continuous`, `scale_color_discrete`, `scale_x_log10`
+
+## ggplot2 example - update scale for y-axis
+
+```{r, message=FALSE, fig.height=3, fig.width=6}
+ggplot(iris, aes(x = Petal.Width, y = Sepal.Width, 
+                 color=Species)) + geom_point() +
+  scale_y_continuous(limits=c(0,5), breaks=seq(0,5,0.5))
+
+```
+
+## ggplot2 example - update scale for color
+
+```{r, message=FALSE, fig.height=3, fig.width=6}
+ggplot(iris, aes(x = Petal.Width, y = Sepal.Width, 
+                 color=Species)) + geom_point() +
+  scale_color_manual(name="Iris Species", 
+                     values=c("red","blue","black"))
+
+```
+
+
+## stat functions
+
+All `geoms` perform a default statistical transformation. 
+
+For example, `geom_histogram()` bins the data before plotting. `geom_smooth()` fits a line through the data according to a specified method.
+
+In many cases the transformation is the "identity", which just means plot the raw data. For example, `geom_point()`
+
+These transformations are done by stat functions. The naming scheme is `stat_` followed by the name of the transformation. For example, `stat_bin`, `stat_smooth`, `stat_boxplot`
+
+Every geom has a default stat, every stat has a default geom.
+
+
+## ggplot2 example - geom using default stat
+
+```{r, message=FALSE, fig.height=3, fig.width=6}
+ggplot(iris, aes(x=Petal.Width)) + geom_histogram()
+
+```
+
+## ggplot2 example - stat using default geom
+
+```{r, message=FALSE, fig.height=3, fig.width=6}
+ggplot(iris, aes(x=Petal.Width)) + stat_bin()
+
+```
+
+
+## Update themes and labels
+
+The default ggplot2 theme is excellent. It follows the advice of several landmark papers regarding statistics and visual perception. (Wickham, p. 141)
+
+However you can change the theme using ggplot2's themeing system.
+
+You can also update axis labels and titles using the `labs` function.
+
+## ggplot2 example - update labels
 
 ```{r, message=FALSE, fig.height=3, fig.width=6}
 ggplot(iris, aes(x = Petal.Width, y = Sepal.Width, 
@@ -93,26 +222,8 @@ ggplot(iris, aes(x = Petal.Width, y = Sepal.Width,
 
 ```
 
-## ggplot example - update y-axis
 
-```{r, message=FALSE, fig.height=3, fig.width=6}
-ggplot(iris, aes(x = Petal.Width, y = Sepal.Width, 
-                 color=Species)) + geom_point() +
-  scale_y_continuous(limits=c(0,5), breaks=seq(0,5,0.5))
-
-```
-
-## ggplot example - zoom in on plot
-
-```{r, message=FALSE, fig.height=3, fig.width=6}
-ggplot(iris, aes(x = Petal.Width, y = Sepal.Width, 
-                 color=Species)) + geom_point() +
-  coord_cartesian(xlim = c(0,1.5), ylim=c(3,4))
-
-```
-
-
-## ggplot example - change theme
+## ggplot2 example - change theme
 
 ```{r, message=FALSE, fig.height=3, fig.width=6}
 ggplot(iris, aes(x = Petal.Width, y = Sepal.Width, 
@@ -121,37 +232,41 @@ ggplot(iris, aes(x = Petal.Width, y = Sepal.Width,
 
 ```
 
-## ggplot example - add multiple geoms
+
+## mapping and data in geoms
+
+You can also define new data sets and aesthetic mappings in the geom functions.
+
+This allows you to build more complex graphs.
+
+A common example is adding error bars to plots.
+
+
+## ggplot2 example - adding means to boxplots
 
 ```{r, message=FALSE, fig.height=3, fig.width=6}
-ggplot(iris, aes(x = Petal.Width, y = Sepal.Width, 
-                 color=Species)) + 
-  geom_point() + geom_smooth(method="lm") 
+irisMeans <- aggregate(Sepal.Width ~ Species, iris,mean)
+ggplot(iris, aes(x=Species, y=Sepal.Width)) + geom_boxplot() +
+  geom_point(data=irisMeans, color="red")
 ```
 
-## ggplot example - faceting
+## ggplot2 example - using error bars to plots
 
-```{r, message=FALSE, fig.height=3, fig.width=6}
-ggplot(iris, aes(x = Petal.Width)) +
-  geom_histogram(binwidth=0.2) + facet_wrap(~ Species) 
-```
+```{r}
+ggplot(iris, aes(x=Species, y=Sepal.Width)) + geom_point(color="grey60") +
+  stat_summary(fun.data="mean_cl_normal", geom = "pointrange", 
+               color="red")
 
-## ggplot example - adding a statistical transformation
-
-```{r, message=FALSE, fig.height=3, fig.width=6}
-ggplot(iris, aes(x = Species, y=Petal.Width)) +
-  geom_boxplot() + 
-  stat_summary(fun.y = mean, geom="point", color="red")
 ```
 
 
 ## ggplot2 - points to remember
 
-- Can do a lot with `ggplot(data, aes()) + geom_xxx()`!
+- Can do a lot with `ggplot(data, aes()) + geom`!
 - Data must be a data frame (not a matrix or collection of vectors)
 - Data often must be in _long_ format, which sometimes means reshaping data
 - Does not do 3D plots
-- The online R documentation has many good examples
+- The `ggplot2` documentation has many good examples
 
 Let's go to R!
 
@@ -168,6 +283,9 @@ http://www.rstudio.com/wp-content/uploads/2015/04/ggplot2-cheatsheet.pdf
 
 **R Graph Catalog**   
 http://shinyapps.stat.ubc.ca/r-graph-catalog/
+
+**Cookbook for R - Graphs**   
+http://www.cookbook-r.com/Graphs/
 
 
 ## StatLab
