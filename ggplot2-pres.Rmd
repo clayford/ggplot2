@@ -54,11 +54,13 @@ There's an entire book on this, but I'll attempt to boil it down to one slide (*
 
 - The `aes()` function maps columns of the data frame to aesthetic properties of geometric shapes to be plotted.
 
+- `ggplot()` defines the plot; the `geoms` show the data; layers are added with `+` 
+
 - Some examples should make this clear
 
 ## The iris data set
 
-This is a famous data set from 1936, courtesy of R.A. Fisher, that comes with R and is excellent for demonstrating ggplot2.
+This is a famous data set from 1936, courtesy of Ronald Fisher, that comes with R and is excellent for demonstrating ggplot2.
 
 ```{r}
 str(iris)
@@ -143,7 +145,7 @@ ggplot(iris, aes(x = Petal.Width, y = Sepal.Width)) +
 
 ```{r, message=FALSE, fig.height=3, fig.width=6}
 ggplot(iris, aes(x = Petal.Width)) +
-  geom_histogram(binwidth=0.2) + facet_grid(Species ~ .) 
+  geom_histogram() + facet_grid(Species ~ .) 
 ```
 
 ## Customizing scales
@@ -186,23 +188,34 @@ In many cases the transformation is the "identity", which just means plot the ra
 
 These transformations are done by stat functions. The naming scheme is `stat_` followed by the name of the transformation. For example, `stat_bin`, `stat_smooth`, `stat_boxplot`
 
-Every geom has a default stat, every stat has a default geom.
+**Every geom has a default stat, every stat has a default geom.**
 
 
 ## ggplot2 example - geom using default stat
 
 ```{r, message=FALSE, fig.height=3, fig.width=6}
-ggplot(iris, aes(x=Petal.Width)) + geom_histogram()
+ggplot(iris, aes(x=Petal.Width, y=Petal.Length)) + 
+  geom_point() + geom_smooth() 
 
 ```
 
 ## ggplot2 example - stat using default geom
 
 ```{r, message=FALSE, fig.height=3, fig.width=6}
-ggplot(iris, aes(x=Petal.Width)) + stat_bin()
+ggplot(iris, aes(x=Petal.Width, y=Petal.Length)) + 
+  geom_point() + stat_smooth() 
 
 ```
 
+## Why should I care about `stat` versus `geom`?
+
+**The stat and geom functions can use each other's arguments.**
+
+When consulting the documentation for a particular geom, you'll see examples using arguments not defined on that help page.
+
+To find out what those arguments do, you need to view the associated stat help page.
+
+For example, `geom_smooth(method="lm")`; the `method` argument is documented on the `stat_smooth` help page.
 
 ## Update themes and labels
 
@@ -239,24 +252,15 @@ You can also define new data sets and aesthetic mappings in the geom functions.
 
 This allows you to build more complex graphs.
 
-A common example is adding error bars to plots.
+A common example is adding summary stats to plots.
 
 
 ## ggplot2 example - adding means to boxplots
 
 ```{r, message=FALSE, fig.height=3, fig.width=6}
-irisMeans <- aggregate(Sepal.Width ~ Species, iris,mean)
-ggplot(iris, aes(x=Species, y=Sepal.Width)) + geom_boxplot() +
-  geom_point(data=irisMeans, color="red")
-```
-
-## ggplot2 example - using error bars to plots
-
-```{r}
-ggplot(iris, aes(x=Species, y=Sepal.Width)) + geom_point(color="grey60") +
-  stat_summary(fun.data="mean_cl_normal", geom = "pointrange", 
-               color="red")
-
+irisMeans <- aggregate(Sepal.Width ~ Species, iris, mean)
+ggplot(iris, aes(x=Species, y=Sepal.Width)) + 
+  geom_boxplot() + geom_point(data=irisMeans, color="red")
 ```
 
 
