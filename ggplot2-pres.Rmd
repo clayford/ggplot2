@@ -5,7 +5,7 @@ date: "Fall 2015"
 output: beamer_presentation
 ---
 
-## Workshop plan
+## Workshop topics
 
 - overview of ggplot2 philosophy and logic
 - quick, exploratory graphs
@@ -32,9 +32,9 @@ There's an entire book on this, but I'll attempt to boil it down to one slide (*
 
 - A statistical graphic is a mapping from data to aesthetic attributes (location, color, shape, size) of geometric objects (points, lines, bars). 
 
-- Scales control the mapping from data to aesthetics and provide tools to read the plot (ie, axes and legends).
-
 - The geometric objects are drawn in a specific coordinate system.
+
+- Scales control the mapping from data to aesthetics and provide tools to read the plot (ie, axes and legends).
 
 - The plot may also contain statistical transformations of the data (means, medians, bins of data, trend lines).
 
@@ -254,11 +254,21 @@ This allows you to build more complex graphs.
 
 A common example is adding summary stats to plots.
 
+## ggplot2 example - adding means to boxplots
+
+First we calculate mean `Sepal.Width` by `Species`.    
+The `aggregate` function returns a data frame.
+
+```{r}
+irisMeans <- aggregate(Sepal.Width ~ Species, iris, mean)
+irisMeans
+```
+
+
 
 ## ggplot2 example - adding means to boxplots
 
 ```{r, message=FALSE, fig.height=3, fig.width=6}
-irisMeans <- aggregate(Sepal.Width ~ Species, iris, mean)
 ggplot(iris, aes(x=Species, y=Sepal.Width)) + 
   geom_boxplot() + geom_point(data=irisMeans, color="red")
 ```
