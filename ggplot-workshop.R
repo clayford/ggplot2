@@ -18,10 +18,7 @@
 # we'll use the following packages today.
 # only submit these lines if you don't already have these packages installed. 
 install.packages("ggplot2")
-install.packages("reshape2")
-install.packages("scales")
-install.packages("maps")
-install.packages("mapproj")
+install.packages("gridExtra")
 
 library(ggplot2)
 
@@ -38,13 +35,12 @@ library(ggplot2)
 # merged with...
 
 # Real Estate Information - Parcel Level Data.  This file contains information
-# about the parcel itself such as owner information, deed acreage value, and
-# assessed value
+# about the parcel itself such as assessed value
 # http://www.albemarle.org/gds/gisdata/CAMA/CAMA_ParcelInfo_TXT.zip
 
+url1 <- "http://people.virginia.edu/~jcf2d/workshops/ggplot2/cville_real_estate.csv"
+homes <- read.csv(url1)
 
-homes <- read.csv("data/cville_real_estate.csv")
-homes <- read.csv("URL")
 str(homes)
 
 
@@ -79,14 +75,34 @@ p + geom_density()
 # combine density and histogram
 p + geom_histogram(aes(y=..density..), binwidth=300) + geom_density(color="red")
 
+# we can make overlayed histograms with transparency
+ggplot(homes, aes(x=FinSqFt, fill=Condition)) + 
+  geom_histogram(position = "identity", alpha=0.4, binwidth=250)
+# position="identity" needed for overlapping; without they get stacked;
+# alpha = transparency setting
+
+# probably better with fewer categories
+# the scale function manually orders the legend
+ggplot(subset(homes, Condition %in% c("Excellent","Good","Average")), 
+       aes(x=FinSqFt, fill=Condition)) + 
+  geom_histogram(position = "identity", alpha=0.4, binwidth=250) 
+
+
+
+####################################
 # YOUR TURN! Create a histogram of TotalValue, the total value of the home.
 # What's a good bandwidth?
+ggplot(homes, aes(x=TotalValue)) + geom_histogram(binwidth = 50000)
 
-
-
+####################################
 
 # Bar Plots help us visualize how discrete values are distributed:
 ggplot(homes, aes(x=Condition)) + geom_bar()
+
+# Use a scales function to re-order x-axis
+ggplot(homes, aes(x=Condition)) + geom_bar() +
+  scale_x_discrete(limits=c("Excellent","Good","Average","Fair","Poor","Substandard"))
+
 
 # What happens when we combine other aesthetics with bar plots?
 # For example, map the Remodeled indicator to color;
@@ -103,7 +119,7 @@ ggplot(homes, aes(x=Condition, fill=factor(Remodeled))) +
   geom_bar(position = "dodge") +
   scale_fill_discrete(name="Remodeled")
 
-# By default, the stat for geom_barplot (stat_bin) counts up things in your data
+# By default, the stat for geom_bar (stat_bin) counts up things in your data
 # frame. What if you already have counts? Use the "identity" stat and map value
 # to y aesthetic.
 remod <- as.data.frame(table(homes$Remodeled))
@@ -120,16 +136,6 @@ p2 + scale_x_discrete(labels=c("Original","Remodeled")) +
        title="Number of remodeled versus original homes in Charlottesville")
 
 
-# Dot plots are a reasonable substitute for bar plots. They use "less ink".
-condition <- as.data.frame(table(homes$Condition, dnn = "Condition"))
-condition
-
-ggplot(condition, aes(x=Freq, y=Condition)) + geom_point()
-# reorder x-axis by Freq, add axis labels
-ggplot(condition, aes(x=Freq, y=reorder(Condition, Freq))) + 
-  geom_point() + labs(x="Number of Houses", y="Condition")
-
-
 # Two variables -----------------------------------------------------------
 
 # The scatterplot allows you to visualize the relationship between two
@@ -139,14 +145,7 @@ ggplot(condition, aes(x=Freq, y=reorder(Condition, Freq))) +
 ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point()
 
 # Lots of overplotting!
-# Perhaps look at homes after 1900
-# make sure new data set is a data frame; subset is good for this
-homes1900 <- subset(homes, YearBuilt > 1900)
-class(homes1900) # yep, it's a data frame!
-ggplot(homes1900, aes(x=FinSqFt, y=TotalValue)) + geom_point()
-
-# we could also take a random sample of homes, say 1000.
-set.seed(10)
+# we could take a random sample of homes, say 1000.
 homesSample <- homes[sample(nrow(homes),1000),]
 ggplot(homesSample, aes(x=FinSqFt, y=TotalValue)) + geom_point()
 
@@ -160,6 +159,7 @@ ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point(shape=".")
 # Notice we can set an aesthetic property to a single value instead of
 # mapping it to a variable. 
 
+
 # Another approach is to use facets: break the data into subsets 
 ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point() +
   facet_wrap(~ Condition)
@@ -169,24 +169,28 @@ ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point() +
   facet_wrap(~ Condition, scales = "free")
 
 # and we can combine our tactics
-p3 <- ggplot(homes1900, aes(x=FinSqFt, y=TotalValue)) + 
+p3 <- ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + 
   geom_point(alpha=1/6) +
   facet_wrap(~ Condition)
 p3
 
-# YOUR TURN! Plot FinSqFt vs. YearBuilt. Put FinSqFt on the y axis. Use the
-# full homes data set. Facet by Condition. Perhaps try an alpha setting?
+
+#################################### 
+# YOUR TURN! Plot FinSqFt vs. YearBuilt. Put FinSqFt on the y axis. Facet by
+# Condition. Perhaps try an alpha setting?
 ggplot(homes, aes(x=YearBuilt, y=FinSqFt)) + geom_point(alpha=1/8) +
   facet_wrap(~ Condition)
 
+
+####################################
 
 # Look again at our p3 plot:
 p3
 # The y-axis scale would look better formatted as dollar amounts. The scales
 # package can help with this. It has functions designed for this type of
-# situation. For example:
+# situation. When you install ggplot2, scales is installed as well.
 library(scales)
-p3 <- p3 + scale_y_continuous(labels=dollar)
+p3 <- p3 + scale_y_continuous(labels=dollar) + scale_x_continuous(labels=comma)
 p3
 # We can add a smooth line through our scatterplots with geom_smooth()
 p3 + geom_smooth()
@@ -194,6 +198,28 @@ p3 + geom_smooth()
 # let's just try fitting a straight linear regression line
 p3 + geom_smooth(method="lm")
 p3 + geom_smooth(method="lm", se=F)
+
+# we can also specify our own formula
+p3 + geom_smooth(method="lm", se=F, formula= y ~ poly(x,2))
+
+
+# Log Transformations in scatter plots
+
+# Dollar amounts are often log transformed. Maybe try log base 10 transformation
+# directly:
+ggplot(homes, aes(x=log10(FinSqFt), y=log10(TotalValue))) + geom_point()
+
+# can use scale functions to both transform data and map scales to original data
+# space:
+ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point() +
+  scale_x_log10() + scale_y_log10()
+
+# getting fancy using more scales functions...
+ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point() +
+  scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x))) + 
+  scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x)))
 
 
 # Boxplots are good for visualizing a continous variable conditional on a
@@ -215,15 +241,20 @@ ggplot(subset(homes, TotalValue < 1e6),
        aes(x=factor(FullBath),y=TotalValue)) + 
   geom_boxplot() + scale_y_continuous(labels=dollar)
 
+####################################
 # YOUR TURN! Make a boxplot of FinSqFt by HalfBath. 
 ggplot(homes, aes(x=factor(HalfBath), y=FinSqFt)) + geom_boxplot() +
   scale_y_continuous(labels=comma)
+
+
+
+####################################
 
 # A nice alternative to boxplots are stripcharts. Basically plot a 1d 
 # scatterplot for each level of the discrete value. Works well for smaller data
 # sets.
 
-# 0 bedroom houses
+# 0 bedroom houses (?)
 homes0 <- subset(homes, Bedroom==0)
 
 # plot total value per Number of Full Baths
@@ -234,7 +265,7 @@ ggplot(homes0, aes(x=factor(FullBath), y=TotalValue)) +
 # up-and-down.
 
 
-# How about plotting two discrete (ie, integer) variables?
+# How about plotting two "discrete" integer variables?
 # Bedroom vs. FullBath
 ggplot(homes, aes(x=Bedroom,y=FullBath)) + geom_point()
 
@@ -247,16 +278,15 @@ ggplot(homes, aes(x=Bedroom,y=FullBath)) + geom_jitter() +
   scale_y_continuous(breaks=0:12, minor_breaks=NULL)
   
 
+# line graphs are nice for connecting dots and showing a trend over time.
 
-# line graph --------------------------------------------------------------
-
-
-# number of houses built per year
+# plot number of houses built per year
 years <- as.data.frame(table(homes$YearBuilt, dnn="YearBuilt"), 
                            stringsAsFactors = FALSE)
 str(years)
 years$YearBuilt <- as.numeric(years$YearBuilt)
 
+# now use geom_line()
 ggplot(years, aes(x=YearBuilt, y=Freq)) + geom_line()
 
 # again we can touch up the scales and labels
@@ -264,163 +294,40 @@ ggplot(years, aes(x=YearBuilt, y=Freq)) + geom_line() +
   scale_x_continuous(breaks=seq(1700,2000,50)) +
   labs(x="Year",y="Number of Homes")
 
+# what year was the spike?
+subset(years, Freq > 800)
 
-# geom_line() with "group" aesthetic for lines within groups
-
-# Six subjects were given an intravenous injection of indometacin at 11 times,
-# and each time plasma concentrations of indometacin was measured.
-
-names(Indometh)
-summary(Indometh)
-
-# plot lines for for conc over time for each subject; notice the "group"
-# aesthetic
-ggplot(Indometh, aes(x=time,y=conc, group=Subject)) +
-  geom_line()
-
-# with color
-ggplot(Indometh, aes(x=time, y=conc, group=Subject, color=Subject)) +
-  geom_line()
-
-# Notice the legend is not in numeric order. That's because Subject is an
-# ordered factor.
-class(Indometh$Subject)
-levels(Indometh$Subject)
-
-# Remember that scales control legends. So to put the legend in numeric order we
-# need to use the scale_color_discrete() function. Simply set the limits to
-# range from 1 to 6.
-ggplot(Indometh, aes(x=time,y=conc,group=Subject, color=Subject)) +
-  geom_line() +
-  scale_color_discrete(limits=1:6)
-
-# Let's do a quick example of reshaping data and using line graphs with faceting
-head(airquality,3)
-
-# Let's reshape airquality so there's one record per day per measure. The melt()
-# function from the reshape2 package makes this pretty easy.
-
-# First make a copy of airquality
-aq <- airquality
-
-# Next combine the Day and Month columns into one column called date
-aq$date <- as.Date(paste("1973",aq$Month, aq$Day,sep="-"))
-# Then drop Month and Day columns since we don't need them
-aq$Month <- aq$Day <- NULL 
-head(aq, 3)
-
-# now we melt the data, ie make it Long. id.vars = "date" means that's the 
-# column that remains and identifies a record. The remaining columns are
-# "melted".
-aqLong <- melt(aq, id.vars = "date")
-head(aqLong)
-
-# now we can make line graphs for each value vs. date faceted by variable
-ggplot(aqLong, aes(x=date, y=value)) + geom_line() + 
-  facet_wrap( ~ variable)
-
-# Notice all four variables are sharing the same size scale. It's probably 
-# better to allow the y-axis to vary. The scales = "free_y" argument allows us
-# to do that.
-ggplot(aqLong, aes(x=date, y=value)) + geom_line() + 
-  facet_wrap( ~ variable, scales = "free_y")
+# Multiple plots in one window --------------------------------------------
 
 
-# Your Turn!
+# In base R, we usually use par(mfrow=c(i,j)), like so:
+par(mfrow=c(1,2))
+hist(homes$FinSqFt)
+plot(FinSqFt ~ YearBuilt, data=homes)
+par(mfrow=c(1,1))
 
-# The nlme package (that comes with R) has a dataset called Oxboys. These data 
-# contain the height of 26 boys from Oxford, England recorded over time (age). 
-# Load the data and plot height (y) versus standardized age (x) for each boy
-# (Subject). Don't worry about a legend.
-data(Oxboys, package = "nlme")
-summary(Oxboys)
+# We cannot use this approach for ggplot2. The easiest solution is to use the 
+# grid.arrange() function in the gridExtra package. To use it, you have to save
+# your plots and then call them using grid.arrange().
 
-ggplot(Oxboys, aes(x=age,y=height, group=Subject)) +
-  geom_line() 
-
-
-# bar graph ---------------------------------------------------------------
-
-# bar graphs in ggplot can be a little tricky. By default, it plots a count of 
-# items in a category. Technically this is a statistical transformation, 
-# stat="bin", which requires your data to have one record per item being
-# counted. If your data set already contains counts, you have to specify
-# stat="identity".
-
-# Let's do some examples of both scenarios.
-
-# The following data are occurences of cougars in the US. It was downloaded from
-# Biodiversity Information Serving Our Nation (BISON),
-# http://bison.usgs.ornl.gov.
-
-url <- "http://people.virginia.edu/~jcf2d/workshops/ggplot2/bison-Cougar-20150520-172801.csv"
-cougar <- read.csv(url)
-
-# Basis of Record - the type of species occurrence or evidence upon which it is
-# based.
-summary(cougar$basisOfRecord)
-
-# Let's make a bar graph of that.
-ggplot(cougar, aes(x=basisOfRecord)) + geom_bar()
-
-# Easy enough because our data set has one record per occurence.
-
-# What if the data was aggregated, like so:
-cougar2 <- as.data.frame(xtabs(~ basisOfRecord, data=cougar))
-cougar2
-
-# now try ggplot with geom_bar()
-ggplot(cougar2, aes(x=basisOfRecord)) + geom_bar()
-# it counted one record each! Not what we wanted.
-
-# We need to change the statistical transformation to stat="identity" and
-# specify a y-axis aesthetic.
-ggplot(cougar2, aes(x=basisOfRecord, y=Freq)) + geom_bar(stat="identity")
-
-# Notice we could use a dot plot for this graph
-ggplot(cougar2, aes(x=Freq, y=basisOfRecord)) + 
-  geom_point()
-
-# Perhaps add a line from the point to the y-axis.
-ggplot(cougar2, aes(x=Freq, y=basisOfRecord)) + 
-  geom_point() +
-  geom_segment(aes(xend = 0, yend = basisOfRecord))  +
-  labs(y="Basis of Record")
+p1 <- ggplot(homes, aes(x=FinSqFt)) + geom_histogram() 
+p2 <- ggplot(homes, aes(x=YearBuilt, y=FinSqFt)) + geom_point()
+library(gridExtra)
+grid.arrange(p1, p2, nrow=1) # can also use ncol
 
 
-
-# Your turn!
-
-# Using the cougar data set, create a bar chart of occurences by providedState. 
-# Recall each record is an occurence so we just need to make a bar chart of 
-# providedState. Hint: add + coord_flip() to rotate your chart and make it look
-# nicer.
-
-ggplot(cougar, aes(x=providedState)) + geom_bar() + coord_flip()
-
-
-
-# Advanced Topics ---------------------------------------------------------
-
-# saving ggplot graphs
-p <- ggplot(iris, aes(x = Petal.Width, y = Petal.Length, color=Species)) + 
-  geom_point()
-
-p
-
-# add geoms to saved graph; handy for interactive use; saves typing
-
-p + geom_smooth(method="lm")  
-p + geom_smooth(method="lm", se=F)   
-p + geom_smooth(method="lm", formula = y ~ poly(x, 3))
-p + geom_point(aes(size=Sepal.Width))
+# Miscellaneous Topics ----------------------------------------------------
 
 # "zoom in" on plot with coord_cartesian()
-p + geom_smooth(method="lm", se=F) +
-  coord_cartesian(xlim=c(1,2), ylim = c(3, 5))
+ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point()
+
+# zoom in on houses with 2000 to 3000 FinSqFt and value between $200,000 and
+# $400,000
+ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point() +
+  coord_cartesian(xlim=c(2000,3000),c(200000,400000))
 
 
-# add mean to boxplots
+# add means to boxplots
 
 # add mean to iris box plots
 bp <- ggplot(iris, aes(x=Species, y=Petal.Width)) + geom_boxplot(width=0.5)
@@ -461,7 +368,11 @@ ggplot(chickwts, aes(x=feed, y=weight)) +
 
 # single line graph of means at each time point with SE bars
 
-# Recall this plot:
+# Indometh data (comes with R)
+# Six subjects were given an intravenous injection of indometacin at 11 times,
+# and each time plasma concentrations of indometacin was measured.
+
+# Here we make a line plot for each subject:
 ggplot(Indometh, aes(x=time,y=conc, group=Subject)) +
   geom_line()
 
@@ -485,51 +396,47 @@ ggplot(Indometh, aes(x=time,y=conc)) +
   stat_summary(fun.data="mean_cl_normal", geom="errorbar", width=0.1) +
   stat_summary(fun.y = mean, geom="line")
 
-# overlayed histograms with transparency
-ggplot(iris, aes(x=Petal.Length, fill=Species)) +
-  geom_histogram(position="identity", alpha=0.4, binwidth=.1) 
-# position="identity" needed for overlapping; without they get stacked;
-# alpha = transparency setting
 
 # maps
-library(maps)
-library(mapproj) # for the "ployconic" option
+# ggplot can plot maps
 
+# The following data are occurences of cougars in the US. It was downloaded from
+# Biodiversity Information Serving Our Nation (BISON),
+# http://bison.usgs.ornl.gov.
+
+url <- "http://people.virginia.edu/~jcf2d/workshops/ggplot2/bison-Cougar-20150520-172801.csv"
+cougar <- read.csv(url)
+
+install.packages("maps")
+install.packages("mapproj")
+
+library(maps)
+library(mapproj) # for the "polyconic" option
+
+# Let's plot a map that shows occurences of courgars in the US and the type of occurence.
+
+# first create a data frame of map data; "state" is the name of a map provided
+# by the maps package.
 states <- map_data("state")
+# rename providedState to "region and make lower case for purposes of merging
 cougar$region <- tolower(cougar$providedState)
+# merge states and courgar data frames by region
 cougmap <- merge(states, subset(cougar, !is.na(decimalLongitude)), by = "region")
 
-ggplot(cougmap, aes(long, lat)) +
+# now we're ready to plot! Map longitude and latitude to x and y aesthetics;
+# The borders function draws the state borders;
+# the coord_map("polyconic") function makes the map look curvy, like a globe;
+# Give it a second...
+ggplot(cougmap, aes(x=long, y=lat)) +
   borders("state") +
   geom_point(aes(x = decimalLongitude, y=decimalLatitude, color=basisOfRecord)) +
   coord_map("polyconic")
+
 
 # saving graphs as images
 
 # use ggsave(). It saves the last plot according to your file extension.
 ggsave("cougars.jpg", width=10, height=5)
-
-
-
-# editing guides (legends) 
-
-# plot Ozone vs. Temp with point color mapped to Month; we have to use the 
-# factor() function to ensure Month is treated as a categorical variable.
-# Compare the difference:
-
-ggplot(airquality, aes(x=Temp, y=Ozone, color=Month)) + geom_point()
-ggplot(airquality, aes(x=Temp, y=Ozone, color=factor(Month))) + geom_point()
-
-# The second plot is what we want, but look at the legend title. How can we fix 
-# that? A discrete factor (Month) is mapped to color, so we need to change the 
-# properties of the color scale. Therefore we use the scale_color_discrete() 
-# function. NOTE: month.name is a built-in R function that contains names of
-# months in a vector. Below I extract the months numbered 5 - 9.
-
-ggplot(airquality, aes(x=Temp, y=Ozone, color=factor(Month))) + geom_point() +
-  scale_color_discrete(name = "Month", labels=month.name[5:9])
-
-
 
 # Themes
 
@@ -557,24 +464,7 @@ ggplot(airquality, aes(x=Temp)) + geom_freqpoly(binwidth=2) +
   facet_wrap(~Month)
 
 
-# Multiple plots in one window
 
-# In base R, we usually use par(mfrow=c(i,j)), like so:
-par(mfrow=c(1,2))
-hist(airquality$Temp, main="Distribution of Temp", xlab="Temp")
-plot(Ozone ~ Temp, data=airquality, main="Ozone vs. Temp")
-par(mfrow=c(1,1))
-
-# We cannot use this approach for ggplot2. The easiest solution is to use the 
-# grid.arrange() function in the gridExtra package. To use it, you have to save
-# your plots and then call them using grid.arrange().
-
-p1 <- ggplot(airquality, aes(x=Temp)) + geom_histogram(binwidth=4.5) + 
-  labs(title="Distribution of Temp")
-p2 <- ggplot(airquality, aes(x=Temp, y=Ozone)) + geom_point() +
-  labs(title="Ozone vs. Temp")
-library(gridExtra)
-grid.arrange(p1, p2, nrow=1) # can also use ncol
 
 
 

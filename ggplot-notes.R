@@ -517,3 +517,171 @@ basic + aes(size = .cooksd) + scale_size_area("Cook's distance")
 full <- basic %+% fortify(mpgmod, mpg)
 full + aes(colour = factor(cyl))
 full + aes(displ, colour = factor(cyl))
+
+
+# bar graph ---------------------------------------------------------------
+
+# bar graphs in ggplot can be a little tricky. By default, it plots a count of 
+# items in a category. Technically this is a statistical transformation, 
+# stat="bin", which requires your data to have one record per item being
+# counted. If your data set already contains counts, you have to specify
+# stat="identity".
+
+# Let's do some examples of both scenarios.
+
+# The following data are occurences of cougars in the US. It was downloaded from
+# Biodiversity Information Serving Our Nation (BISON),
+# http://bison.usgs.ornl.gov.
+
+url <- "http://people.virginia.edu/~jcf2d/workshops/ggplot2/bison-Cougar-20150520-172801.csv"
+cougar <- read.csv(url)
+
+# Basis of Record - the type of species occurrence or evidence upon which it is
+# based.
+summary(cougar$basisOfRecord)
+
+# Let's make a bar graph of that.
+ggplot(cougar, aes(x=basisOfRecord)) + geom_bar()
+
+# Easy enough because our data set has one record per occurence.
+
+# What if the data was aggregated, like so:
+cougar2 <- as.data.frame(xtabs(~ basisOfRecord, data=cougar))
+cougar2
+
+# now try ggplot with geom_bar()
+ggplot(cougar2, aes(x=basisOfRecord)) + geom_bar()
+# it counted one record each! Not what we wanted.
+
+# We need to change the statistical transformation to stat="identity" and
+# specify a y-axis aesthetic.
+ggplot(cougar2, aes(x=basisOfRecord, y=Freq)) + geom_bar(stat="identity")
+
+# Notice we could use a dot plot for this graph
+ggplot(cougar2, aes(x=Freq, y=basisOfRecord)) + 
+  geom_point()
+
+# Perhaps add a line from the point to the y-axis.
+ggplot(cougar2, aes(x=Freq, y=basisOfRecord)) + 
+  geom_point() +
+  geom_segment(aes(xend = 0, yend = basisOfRecord))  +
+  labs(y="Basis of Record")
+
+
+# geom_line() with "group" aesthetic for lines within groups
+
+# Six subjects were given an intravenous injection of indometacin at 11 times,
+# and each time plasma concentrations of indometacin was measured.
+
+names(Indometh)
+summary(Indometh)
+
+# plot lines for for conc over time for each subject; notice the "group"
+# aesthetic
+ggplot(Indometh, aes(x=time,y=conc, group=Subject)) +
+  geom_line()
+
+# with color
+ggplot(Indometh, aes(x=time, y=conc, group=Subject, color=Subject)) +
+  geom_line()
+
+# Notice the legend is not in numeric order. That's because Subject is an
+# ordered factor.
+class(Indometh$Subject)
+levels(Indometh$Subject)
+
+# Remember that scales control legends. So to put the legend in numeric order we
+# need to use the scale_color_discrete() function. Simply set the limits to
+# range from 1 to 6.
+ggplot(Indometh, aes(x=time,y=conc,group=Subject, color=Subject)) +
+  geom_line() +
+  scale_color_discrete(limits=1:6)
+
+# Let's do a quick example of reshaping data and using line graphs with faceting
+head(airquality,3)
+
+# Let's reshape airquality so there's one record per day per measure. The melt()
+# function from the reshape2 package makes this pretty easy.
+
+# First make a copy of airquality
+aq <- airquality
+
+# Next combine the Day and Month columns into one column called date
+aq$date <- as.Date(paste("1973",aq$Month, aq$Day,sep="-"))
+# Then drop Month and Day columns since we don't need them
+aq$Month <- aq$Day <- NULL 
+head(aq, 3)
+
+# now we melt the data, ie make it Long. id.vars = "date" means that's the 
+# column that remains and identifies a record. The remaining columns are
+# "melted".
+aqLong <- melt(aq, id.vars = "date")
+head(aqLong)
+
+# now we can make line graphs for each value vs. date faceted by variable
+ggplot(aqLong, aes(x=date, y=value)) + geom_line() + 
+  facet_wrap( ~ variable)
+
+# Notice all four variables are sharing the same size scale. It's probably 
+# better to allow the y-axis to vary. The scales = "free_y" argument allows us
+# to do that.
+ggplot(aqLong, aes(x=date, y=value)) + geom_line() + 
+  facet_wrap( ~ variable, scales = "free_y")
+
+
+# Your Turn!
+
+# The nlme package (that comes with R) has a dataset called Oxboys. These data 
+# contain the height of 26 boys from Oxford, England recorded over time (age). 
+# Load the data and plot height (y) versus standardized age (x) for each boy
+# (Subject). Don't worry about a legend.
+data(Oxboys, package = "nlme")
+summary(Oxboys)
+
+ggplot(Oxboys, aes(x=age,y=height, group=Subject)) +
+  geom_line() 
+
+
+
+
+# Your turn!
+
+# Using the cougar data set, create a bar chart of occurences by providedState. 
+# Recall each record is an occurence so we just need to make a bar chart of 
+# providedState. Hint: add + coord_flip() to rotate your chart and make it look
+# nicer.
+
+ggplot(cougar, aes(x=providedState)) + geom_bar() + coord_flip()
+
+
+
+
+# editing guides (legends) 
+
+# plot Ozone vs. Temp with point color mapped to Month; we have to use the 
+# factor() function to ensure Month is treated as a categorical variable.
+# Compare the difference:
+
+ggplot(airquality, aes(x=Temp, y=Ozone, color=Month)) + geom_point()
+ggplot(airquality, aes(x=Temp, y=Ozone, color=factor(Month))) + geom_point()
+
+# The second plot is what we want, but look at the legend title. How can we fix 
+# that? A discrete factor (Month) is mapped to color, so we need to change the 
+# properties of the color scale. Therefore we use the scale_color_discrete() 
+# function. NOTE: month.name is a built-in R function that contains names of
+# months in a vector. Below I extract the months numbered 5 - 9.
+
+ggplot(airquality, aes(x=Temp, y=Ozone, color=factor(Month))) + geom_point() +
+  scale_color_discrete(name = "Month", labels=month.name[5:9])
+
+
+# Dot plots are a reasonable substitute for bar plots. They use "less ink".
+condition <- as.data.frame(table(homes$Condition, dnn = "Condition"))
+condition
+
+ggplot(condition, aes(x=Freq, y=Condition)) + geom_point()
+# reorder x-axis by Freq, add axis labels
+ggplot(condition, aes(x=Freq, y=reorder(Condition, Freq))) + 
+  geom_point() + labs(x="Number of Houses", y="Condition")
+
+

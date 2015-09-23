@@ -120,9 +120,19 @@ ggplot(iris, aes(x = Species, y = Sepal.Width)) +
 
 A natural next step in exploratory graphing is to create plots of subsets of data. These are called facets in ggplot2.
 
-Use `facet_wrap()` if you want to facet by one variable. 
+Use `facet_wrap()` if you want to facet by one variable.    
 
-Use `facet_grid()` if you want to facet by one and/or two variables
+Example:   
+`facet_wrap( ~ var)`
+
+Use `facet_grid()` if you want to facet by one and/or two variables.     
+
+Examples:    
+`facet_grid(. ~ var1)` - facets in columns   
+`facet_grid(var1 ~ .)` - facets in rows   
+`facet_grid(var1 ~ var2)` - facets in rows and columns   
+
+
 
 ## ggplot2 example - `facet_wrap` (common scales)
 ```{r, message=FALSE, fig.height=3, fig.width=6}
@@ -146,6 +156,8 @@ ggplot(iris, aes(x = Petal.Width, y = Sepal.Width)) +
 ```{r, message=FALSE, fig.height=3, fig.width=6}
 ggplot(iris, aes(x = Petal.Width)) +
   geom_histogram() + facet_grid(Species ~ .) 
+
+
 ```
 
 ## Customizing scales
@@ -156,7 +168,7 @@ Every aesthetic has a default scale. To add or modify a scale, use a `scale` fun
 
 All scale functions have a common naming scheme: `scale_`, followed by the name of the aesthetic (`y_`), followed by the name of the scale (`continuous`).
 
-Examples: `scale_y_continuous`, `scale_color_discrete`, `scale_x_log10`
+Examples: `scale_y_continuous`, `scale_color_discrete`, `scale_x_date`
 
 ## ggplot2 example - update scale for y-axis
 
@@ -246,34 +258,6 @@ ggplot(iris, aes(x = Petal.Width, y = Sepal.Width,
 ```
 
 
-## mapping and data in geoms
-
-You can also define new data sets and aesthetic mappings in the geom functions.
-
-This allows you to build more complex graphs.
-
-A common example is adding summary stats to plots.
-
-## ggplot2 example - adding means to boxplots
-
-First we calculate mean `Sepal.Width` by `Species`.    
-The `aggregate` function returns a data frame.
-
-```{r}
-irisMeans <- aggregate(Sepal.Width ~ Species, iris, mean)
-irisMeans
-```
-
-
-
-## ggplot2 example - adding means to boxplots
-
-```{r, message=FALSE, fig.height=3, fig.width=6}
-ggplot(iris, aes(x=Species, y=Sepal.Width)) + 
-  geom_boxplot() + geom_point(data=irisMeans, color="red")
-```
-
-
 ## ggplot2 - points to remember
 
 - Can do a lot with `ggplot(data, aes()) + geom`!
@@ -301,6 +285,8 @@ http://shinyapps.stat.ubc.ca/r-graph-catalog/
 **Cookbook for R - Graphs**   
 http://www.cookbook-r.com/Graphs/
 
+**ggplot2 online documentation**    
+http://docs.ggplot2.org/current/index.html
 
 ## StatLab
 
