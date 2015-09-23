@@ -262,7 +262,7 @@ ggplot(years, aes(x=YearBuilt, y=Freq)) + geom_line()
 # again we can touch up the scales and labels
 ggplot(years, aes(x=YearBuilt, y=Freq)) + geom_line() +
   scale_x_continuous(breaks=seq(1700,2000,50)) +
-  labs(x="Number of Homes")
+  labs(x="Year",y="Number of Homes")
 
 
 # geom_line() with "group" aesthetic for lines within groups
