@@ -50,7 +50,7 @@ str(homes)
 ggplot(homes, aes(x=FinSqFt)) + geom_histogram()
 
 # not the message regarding "stat_bin"
-# Recal "stat_bin" is the stat for geom_histogram
+# Recall "stat_bin" is the stat for geom_histogram
 # What is range/30?
 diff(range(homes$FinSqFt))/30
 
@@ -103,6 +103,10 @@ ggplot(homes, aes(x=Condition)) + geom_bar()
 ggplot(homes, aes(x=Condition)) + geom_bar() +
   scale_x_discrete(limits=c("Excellent","Good","Average","Fair","Poor","Substandard"))
 
+# the coord_flip() function allows us to flip the coordinate axis
+ggplot(homes, aes(x=Condition)) + geom_bar() +
+  scale_x_discrete(limits=c("Excellent","Good","Average","Fair","Poor","Substandard")) +
+  coord_flip()
 
 # What happens when we combine other aesthetics with bar plots?
 # For example, map the Remodeled indicator to color;
@@ -214,13 +218,6 @@ ggplot(homes, aes(x=log10(FinSqFt), y=log10(TotalValue))) + geom_point()
 ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point() +
   scale_x_log10() + scale_y_log10()
 
-# getting fancy using more scales functions...
-ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point() +
-  scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
-                labels = trans_format("log10", math_format(10^.x))) + 
-  scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
-                labels = trans_format("log10", math_format(10^.x)))
-
 
 # Boxplots are good for visualizing a continous variable conditional on a
 # discrete variable. Let's look at TotalValue by number of FullBaths:
@@ -297,6 +294,22 @@ ggplot(years, aes(x=YearBuilt, y=Freq)) + geom_line() +
 # what year was the spike?
 subset(years, Freq > 800)
 
+# We can add the year to the plot using geom_text:
+ggplot(years, aes(x=YearBuilt, y=Freq)) + geom_line() +
+  scale_x_continuous(breaks=seq(1700,2000,50)) +
+  labs(x="Year",y="Number of Homes") +
+  geom_text(data = NULL, x = 1985, y = 800, label = "1973")
+# why data = NULL? Tell geom_text not to use the data defined in ggplot().
+# You can define data and aesthetics in geoms!
+
+# Quick demo
+dat <- data.frame(a = 1:4, b = 4:1)
+dat2 <- data.frame(c = 5:2, d = 2:5)
+ggplot(dat, aes(x = a, y = b)) + 
+  geom_point() +
+  geom_line(data=dat2, aes(x = c, y = d))
+
+
 # Multiple plots in one window --------------------------------------------
 
 
@@ -316,7 +329,9 @@ library(gridExtra)
 grid.arrange(p1, p2, nrow=1) # can also use ncol
 
 
-# Miscellaneous Topics ----------------------------------------------------
+
+# Time-Permitting Miscellaneous Topics ------------------------------------
+
 
 # "zoom in" on plot with coord_cartesian()
 ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point()
@@ -327,34 +342,28 @@ ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point() +
   coord_cartesian(xlim=c(2000,3000),c(200000,400000))
 
 
-# add means to boxplots
+# add summary stats to graphs 
 
-# add mean to iris box plots
-bp <- ggplot(iris, aes(x=Species, y=Petal.Width)) + geom_boxplot(width=0.5)
-bp
-# now add means to the plot using stat_summary():
-bp + stat_summary(fun.y = mean, geom="point", color="red", size=3)
+# Example: add means and CIs to strip chart 
+# Data: chickwts (An experiment was conducted to measure and compare the
+# effectiveness of various feed supplements on the growth rate of chickens.)
+str(chickwts)
 
-# add means and CIs to strip chart
-
-# first need to calculate means and standard errors
-fMean <- tapply(chickwts$weight, chickwts$feed, mean)
-fSE <- tapply(chickwts$weight, chickwts$feed, function(x) sd(x)/sqrt(length(x)))
-# now create data frame; recall that ggplot requires data frame
-chick2 <- data.frame(feed=names(fMean), fMean, fSE, row.names = NULL)
-
-# now plot strip chart and error bars
-# notice we call two data frames
 sc <- ggplot(chickwts, aes(x=feed, y=weight)) + 
   geom_point(position = position_jitter(w = 0.1, h = 0))
 sc
 
+# now to calculate means and standard errors
+fMean <- tapply(chickwts$weight, chickwts$feed, mean)
+fSE <- tapply(chickwts$weight, chickwts$feed, function(x) sd(x)/sqrt(length(x)))
+chick2 <- data.frame(feed=names(fMean), fMean, fSE, row.names = NULL)
+
 # now add mean and error bars
-sc + geom_point(data=chick2, aes(x=feed, y=fMean), color="#0D3268", size=3) +
+sc + geom_point(data=chick2, aes(x=feed, y=fMean), color="red", size=3) +
   geom_errorbar(data=chick2, aes(x=feed, y=fMean, 
                                  ymin=fMean - 2*fSE, 
                                  ymax=fMean + 2*fSE), 
-                width=0.1, color="#F59A2C") +
+                width=0.1, color="red") +
   labs(title="Mean Weight by Feed Type with 2*SE Bars")
 
 # another way using stat_summary; fun.data="mean_cl_normal" actually calls the 
@@ -362,8 +371,8 @@ sc + geom_point(data=chick2, aes(x=feed, y=fMean), color="#0D3268", size=3) +
 # to determine the multiplier of the standard error.
 ggplot(chickwts, aes(x=feed, y=weight)) + 
   geom_point(position = position_jitter(w = 0.1, h = 0)) +
-  stat_summary(fun.data="mean_cl_normal", color="#F59A2C", geom="errorbar", width=0.1) +
-  stat_summary(fun.y = mean, geom="point", color="#0D3268", size=3)
+  stat_summary(fun.data="mean_cl_normal", color="red", geom="errorbar", width=0.1) +
+  stat_summary(fun.y = mean, geom="point", color="red", size=3)
 
 
 # single line graph of means at each time point with SE bars
@@ -438,6 +447,7 @@ ggplot(cougmap, aes(x=long, y=lat)) +
 # use ggsave(). It saves the last plot according to your file extension.
 ggsave("cougars.jpg", width=10, height=5)
 
+
 # Themes
 
 # Using built-in themes such as theme_bw()
@@ -462,9 +472,4 @@ theme_set(prevTheme)
 # verify
 ggplot(airquality, aes(x=Temp)) + geom_freqpoly(binwidth=2) +
   facet_wrap(~Month)
-
-
-
-
-
 
