@@ -10,25 +10,19 @@ output: beamer_presentation
 - overview of ggplot2 philosophy and logic
 - quick, exploratory graphs
 - fine tuning graphs
-- common manipulation tasks to get your data ready for ggplot2
+- data manipulation tasks to get your data ready for ggplot2
 
 ## Getting Started
 
-- ggplot2 is an R package that has to be installed:   
+- ggplot2 is not included with base R; it has to be installed:       
   `install.packages("ggplot2")`
   
 - Once installed, you need to load it once per R session if you want to use it:   
   `library(ggplot2)`
   
-## The ggplot2 philosophy
-
-- ggplot2 is based on the *Grammar of Graphics*, a book by Leland Wilkinson
-- Instead of thinking in terms of types of graphs (scatterplots, histograms), we think in terms of **mapping** data to **aesthetic** properties of **geometric shapes**
-- If you know the grammar of graphics, ggplot2 allows you to compose novel graphs that are not restricted by a set of canned templates
-
 ## The Grammar of Graphics
 
-There's an entire book on this, but I'll attempt to boil it down to one slide (*courtesy of Wickham, 2009, p. 3*):
+ggplot2 is based on the *Grammar of Graphics* by Leland Wilkinson.
 
 - A statistical graphic is a mapping from data to aesthetic attributes (location, color, shape, size) of geometric objects (points, lines, bars). 
 
@@ -40,8 +34,13 @@ There's an entire book on this, but I'll attempt to boil it down to one slide (*
 
 - Faceting can be used to generate the same plot for different subsets of the data.
 
+## The Grammar of Graphics - illustration
 
-## Basic ggplot2 structure
+![alt text](ggbasics.jpg)
+
+www.rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf
+
+## Basic ggplot2 syntax
 
 **Specify data, aesthetics and geometric shapes** 
 
@@ -60,7 +59,7 @@ There's an entire book on this, but I'll attempt to boil it down to one slide (*
 
 ## The iris data set
 
-This is a famous data set from 1936, courtesy of Ronald Fisher, that comes with R and is excellent for demonstrating ggplot2.
+This is a famous data set from 1936, courtesy of Sir Ronald Fisher, that comes with R and is excellent for demonstrating ggplot2.
 
 ```{r}
 str(iris)
@@ -108,11 +107,11 @@ ggplot(iris, aes(x = Petal.Width, y = Sepal.Width,
   geom_point() + geom_smooth(method="lm")
 ```
 
-## ggplot2 example - add multiple geoms (boxplot and points)
+## ggplot2 example - boxplot (statistical transformation)
 
 ```{r, message=FALSE, fig.height=3, fig.width=6}
 ggplot(iris, aes(x = Species, y = Sepal.Width)) + 
-  geom_boxplot() + geom_point()
+  geom_boxplot() 
 ```
 
 
@@ -168,7 +167,7 @@ Every aesthetic has a default scale. To add or modify a scale, use a `scale` fun
 
 All scale functions have a common naming scheme: `scale_`, followed by the name of the aesthetic (`y_`), followed by the name of the scale (`continuous`).
 
-Examples: `scale_y_continuous`, `scale_color_discrete`, `scale_x_date`
+Examples: `scale_y_continuous`, `scale_color_discrete`, `scale_fill_manual`
 
 ## ggplot2 example - update scale for y-axis
 
@@ -262,7 +261,6 @@ ggplot(iris, aes(x = Petal.Width, y = Sepal.Width,
 
 - Can do a lot with `ggplot(data, aes()) + geom`!
 - Data must be a data frame (not a matrix or collection of vectors)
-- Data often must be in _long_ format, which sometimes means reshaping data
 - Does not do 3D plots
 - The `ggplot2` documentation has many good examples
 
@@ -285,8 +283,8 @@ http://shinyapps.stat.ubc.ca/r-graph-catalog/
 **Cookbook for R - Graphs**   
 http://www.cookbook-r.com/Graphs/
 
-**ggplot2 online documentation**    
-http://docs.ggplot2.org/current/index.html
+**Official ggplot2 web site**    
+http://ggplot2.org/
 
 ## StatLab
 
