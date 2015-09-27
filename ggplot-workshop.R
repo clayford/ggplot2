@@ -536,6 +536,9 @@ ggplot(airquality, aes(x=Temp)) + geom_histogram(binwidth=2) +
 # After
 ggplot(airquality, aes(x=Temp)) + geom_histogram(binwidth=2) +
   facet_wrap(~Month) + theme_bw()
+# another: theme_light
+ggplot(airquality, aes(x=Temp)) + geom_histogram(binwidth=2) +
+  facet_wrap(~Month) + theme_light()
 
 # To permanently change the theme:
 prevTheme <- theme_set(theme_bw())
