@@ -5,12 +5,6 @@ date: "Fall 2015"
 output: beamer_presentation
 ---
 
-## Workshop topics
-
-- overview of ggplot2 philosophy and logic
-- quick, exploratory graphs
-- fine tuning graphs
-- data manipulation tasks to get your data ready for ggplot2
 
 ## Getting Started
 
@@ -19,10 +13,20 @@ output: beamer_presentation
   
 - Once installed, you need to load it once per R session if you want to use it:   
   `library(ggplot2)`
+
+## About ggplot2
+
+- Developed by Hadley Wickham in 2005
+
+- Implements the graphics scheme described in the book _The Grammar of Graphics_ by Leland Wilkinson
+
+- does not create interactive or 3D graphics
+
+- As of February 2014, officially in maintenance mode, meaning no new features will be added
   
 ## The Grammar of Graphics
 
-ggplot2 is based on the *Grammar of Graphics* by Leland Wilkinson.
+The *Grammar of Graphics* boiled down to 5 bullets, courtesy of Wickham (2009):
 
 - A statistical graphic is a mapping from data to aesthetic attributes (location, color, shape, size) of geometric objects (points, lines, bars). 
 
@@ -115,21 +119,21 @@ ggplot(iris, aes(x = Species, y = Sepal.Width)) +
 ```
 
 
-## Moving beyond geoms
+## Moving beyond `ggplot` + `geoms`
 
 A natural next step in exploratory graphing is to create plots of subsets of data. These are called facets in ggplot2.
 
-Use `facet_wrap()` if you want to facet by one variable.    
+Use `facet_wrap()` if you want to facet by one variable and have `ggplot2` control the layout.    
 
 Example:   
-`facet_wrap( ~ var)`
++ `facet_wrap( ~ var)`
 
-Use `facet_grid()` if you want to facet by one and/or two variables.     
+Use `facet_grid()` if you want to facet by one and/or two variables and control layout yourself.     
 
 Examples:    
-`facet_grid(. ~ var1)` - facets in columns   
-`facet_grid(var1 ~ .)` - facets in rows   
-`facet_grid(var1 ~ var2)` - facets in rows and columns   
++ `facet_grid(. ~ var1)` - facets in columns   
++ `facet_grid(var1 ~ .)` - facets in rows   
++ `facet_grid(var1 ~ var2)` - facets in rows and columns   
 
 
 
@@ -165,9 +169,13 @@ Scales control the mapping from data to aesthetics and provide tools to read the
 
 Every aesthetic has a default scale. To add or modify a scale, use a `scale` function. 
 
-All scale functions have a common naming scheme: `scale_`, followed by the name of the aesthetic (`y_`), followed by the name of the scale (`continuous`).
+All scale functions have a common naming scheme: 
+
+`scale` `_` name of aesthetic `_` name of scale
 
 Examples: `scale_y_continuous`, `scale_color_discrete`, `scale_fill_manual`
+
+Heads up: The documentation for `ggplot2` scale functions will frequently use functions from the `scales` package (also by Wickham)!
 
 ## ggplot2 example - update scale for y-axis
 
@@ -197,7 +205,7 @@ For example, `geom_histogram()` bins the data before plotting. `geom_smooth()` f
 
 In many cases the transformation is the "identity", which just means plot the raw data. For example, `geom_point()`
 
-These transformations are done by stat functions. The naming scheme is `stat_` followed by the name of the transformation. For example, `stat_bin`, `stat_smooth`, `stat_boxplot`
+These transformations are done by `stat` functions. The naming scheme is `stat_` followed by the name of the transformation. For example, `stat_bin`, `stat_smooth`, `stat_boxplot`
 
 **Every geom has a default stat, every stat has a default geom.**
 
@@ -230,9 +238,9 @@ For example, `geom_smooth(method="lm")`; the `method` argument is documented on 
 
 ## Update themes and labels
 
-The default ggplot2 theme is excellent. It follows the advice of several landmark papers regarding statistics and visual perception. (Wickham, p. 141)
+The default ggplot2 theme is excellent. It follows the advice of several landmark papers regarding statistics and visual perception. (Wickham 2009, p. 141)
 
-However you can change the theme using ggplot2's themeing system.
+However you can change the theme using ggplot2's themeing system. To date, there are six built-in themes: `theme_gray` (_default_), `theme_bw`, `theme_linedraw`, `theme_light`, `theme_minimal`, `theme_classic`
 
 You can also update axis labels and titles using the `labs` function.
 
@@ -257,12 +265,13 @@ ggplot(iris, aes(x = Petal.Width, y = Sepal.Width,
 ```
 
 
-## ggplot2 - points to remember
+## ggplot2 - some tips
 
 - Can do a lot with `ggplot(data, aes()) + geom`!
 - Data must be a data frame (not a matrix or collection of vectors)
-- Does not do 3D plots
 - The `ggplot2` documentation has many good examples
+- Prepare to invest some time if you want master ggplot2; [the RStudio ggplot2 cheat sheet](https://www.rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf) can help.
+
 
 Let's go to R!
 
