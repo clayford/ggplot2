@@ -20,14 +20,16 @@ install.packages("ggplot2")
 install.packages("gridExtra") # to fit multiple plots in a window
 
 
-# we'll also use the scales package; when you install ggplot2, the scales
+# We'll also use the scales package; when you install ggplot2, the scales
 # package is also installed
+
 library(ggplot2)
 
 
 # Data --------------------------------------------------------------------
 
-# Charlottesville home data
+# Albemarle County real estate data
+# Addresses with City identified as "Charlottesville"
 # Downloaded from Office of Geographic Data Services, 15-Sept-2015
 
 # Primary Card Level Data - this file includes data such as year built, 
@@ -45,9 +47,9 @@ homes <- read.csv("data/cville_real_estate.csv")
 # or download and read in:
 url1 <- "http://people.virginia.edu/~jcf2d/workshops/ggplot2/cville_real_estate.csv"
 homes <- read.csv(url1)
+class(homes) # data.frame
 
 str(homes)
-class(homes) # data.frame
 
 # One Variable ------------------------------------------------------------
 
@@ -72,12 +74,15 @@ ggplot(homes, aes(x=FinSqFt, y=..density..)) +
 
 # The reason we might want a "True" histogram is to overlay a density estimate:
 ggplot(homes, aes(x=FinSqFt, y=..density..)) + 
-  geom_histogram(binwidth=250) +
+  geom_histogram(binwidth=250, color="black", fill="white") +
   geom_density(color="red")
+# Notice I "mapped" fixed values to the color and fill aesthetic
+
 
 # Before we go further, important to note we can save a plot object and add to
 # it:
 p <- ggplot(homes, aes(x=FinSqFt, y=..density..))
+p # nothing to see, n0 layers
 p + geom_histogram(binwidth=300)
 
 # And now try geom_density()
@@ -87,10 +92,13 @@ p + geom_density(color="red")
 p + geom_density(color="red") + geom_histogram(alpha=1/3)
 # alpha is an aesthetic that defines "transparancy"; range: 0 to 1
 
-# we can make overlayed histograms with transparency
+# facet by condition:
+p + geom_histogram(binwidth=300) + facet_wrap(~ Condition)
+
+# overlayed histograms by condition
 ggplot(homes, aes(x=FinSqFt, fill=Condition)) + 
   geom_histogram(position = "identity", alpha=1/3, binwidth=250)
-# position="identity" needed for overlapping; without they get stacked;
+# position="identity" needed for overlapping; without they get stacked
 
 # Try fewer categories
 ggplot(subset(homes, Condition %in% c("Excellent","Good","Average")), 
@@ -104,15 +112,12 @@ ggplot(subset(homes, Condition %in% c("Excellent","Good","Average")),
   geom_histogram(position = "identity", alpha=1/3, binwidth=250) +
   scale_fill_discrete(limits=c("Excellent","Good","Average"))
 
-# use faceting:
-ggplot(homes, aes(x=FinSqFt)) + geom_histogram() +
-  facet_wrap(~ Condition)
   
 
 ####################################
 # YOUR TURN! Create a histogram of TotalValue, the total value of the home.
 # What's a good bandwidth?
-ggplot(homes, aes(x=TotalValue)) + geom_histogram(binwidth = 50000)
+ggplot(homes, aes(x=TotalValue)) + geom_histogram() + xlim(c(0,1e6))
 
 ####################################
 
@@ -128,8 +133,8 @@ ggplot(homes, aes(x=Condition)) + geom_bar() +
   scale_x_discrete(limits=c("Excellent","Good","Average","Fair","Poor","Substandard")) +
   coord_flip() 
 
-# For example, map the Remodeled indicator to fill;
-# we need to declare Remodeled as a "factor"
+# Let's map the Remodeled indicator to fill;
+# we need to declare Remodeled as a "factor"; stored as numbers: 0 and 1
 ggplot(homes, aes(x=Condition, fill=factor(Remodeled))) + geom_bar()
 
 # Note the "stacked" position. We can change that with the position argument:
@@ -140,21 +145,36 @@ ggplot(homes, aes(x=Condition, fill=factor(Remodeled))) +
 # Recall that is a by-product of the scale. So we need to use a scale function.
 ggplot(homes, aes(x=Condition, fill=factor(Remodeled))) + 
   geom_bar(position = "dodge") +
-  scale_fill_discrete(name="Remodeled")
+  scale_fill_discrete(name="Remodeled") +
+  scale_x_discrete(limits=c("Excellent","Good","Average","Fair","Poor"))
 
-# By default, the stat for geom_bar (stat_bin) counts up things in your data
-# frame. What if you already have counts? Use the "identity" stat and map value
-# to y aesthetic. Let's make a bar plot for remodeled homes
+# By default, the stat for geom_bar (stat_bin) counts up things in your data 
+# frame. What if you already have counts? Use stat ="identity" (stat_identity)
+# and map value to y aesthetic. Let's make a bar plot for remodeled homes.
 remod <- as.data.frame(table(homes$Remodeled))
 class(remod)
 remod
 
-p2 <- ggplot(remod, aes(x=Var1, y=Freq)) + 
-  geom_bar(stat="identity", width=0.5)
-p2
+# without stat="identity" - error and a long message
+ggplot(remod, aes(x=Var1, y=Freq)) + geom_bar()
+
+# with stat="identity"
+ggplot(remod, aes(x=Var1, y=Freq)) + geom_bar(stat="identity", width=0.5)
+
 
 # we can fix it up...
-p2 + scale_x_discrete(labels=c("Original","Remodeled")) +
+ggplot(remod, aes(x=Var1, y=Freq)) + 
+  geom_bar(stat="identity", width=0.5) + 
+  scale_x_discrete(labels=c("Original","Remodeled")) +
+  labs(x=NULL, y="Number of Homes", 
+       title="Number of remodeled versus original homes in Charlottesville")
+
+# and it's worth noting the above examples was contrived to demonstrate the 
+# difference between stat_bin and stat_identity'. Below stat="bin" is the
+# default; we don't need to include it.
+ggplot(homes, aes(x=factor(Remodeled))) + 
+  geom_bar(stat="bin", width=0.5) +
+  scale_x_discrete(labels=c("Original","Remodeled")) +
   labs(x=NULL, y="Number of Homes", 
        title="Number of remodeled versus original homes in Charlottesville")
 
@@ -168,22 +188,14 @@ p2 + scale_x_discrete(labels=c("Original","Remodeled")) +
 ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point()
 
 # Lots of overplotting!
-# we could take a random sample of homes, say 1000.
-homesSample <- homes[sample(nrow(homes),1000),]
-ggplot(homesSample, aes(x=FinSqFt, y=TotalValue)) + geom_point()
-
-# What else can we do about the overplotting? One solution is the alpha
-# aesthetic. "alpha=1/10" means 10 points overplotted adds to a solid color
+# What can we do about that? One solution is the alpha aesthetic. "alpha=1/10"
+# means 10 points overplotted adds to a solid color
 ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point(alpha=1/10)
 
 # Can also try smaller points using the shape aesthetic
 ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point(shape=".")
 
 # maybe zoom in? We can do that with coord_cartesian()
-ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point(alpha=1/5) +
-  coord_cartesian(xlim=c(0,5000),ylim=c(0,15e5))
-
-# a little closer...
 ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point(alpha=1/5) +
   coord_cartesian(xlim=c(0,3000),ylim=c(0,5e5))
 
@@ -230,9 +242,16 @@ p3 + geom_smooth()
 p3 + geom_smooth(method="lm")
 p3 + geom_smooth(method="lm", se=FALSE)
 
-# we can also specify our own formula; compare a quadratic fit with the
-# nonparametric smooth line:
+# we can also specify our own formula; compare a quadratic fit with the 
+# nonparametric smooth line
 p3 + geom_smooth(se=FALSE, color="red") +
+  geom_smooth(method="lm", se=FALSE, formula= y ~ poly(x,2)) 
+
+# The errors are annoying; let's remove the Substandard homes;
+# We can replace the data frame using the %+% operator
+p3 %+% 
+  subset(homes, Condition!="Substandard") + 
+  geom_smooth(se=FALSE, color="red") +
   geom_smooth(method="lm", se=FALSE, formula= y ~ poly(x,2)) 
 
 
@@ -244,8 +263,9 @@ ggplot(homes, aes(x=log10(FinSqFt), y=log10(TotalValue))) + geom_point()
 
 # can use scale functions to both transform data and map scales to original data
 # space:
-ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point() +
+ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point(alpha=1/5) +
   scale_x_log10(labels=comma) + scale_y_log10(labels=dollar)
+
 
 
 # Boxplots are good for visualizing a continous variable conditional on a
@@ -303,7 +323,11 @@ ggplot(homes, aes(x=Bedroom,y=FullBath)) + geom_jitter()
 ggplot(homes, aes(x=Bedroom,y=FullBath)) + geom_jitter(alpha=1/5) +
   scale_x_continuous(breaks=0:16, minor_breaks=NULL) +
   scale_y_continuous(breaks=0:12, minor_breaks=NULL)
-  
+
+# scales could be better...
+ggplot(homes, aes(x=Bedroom,y=FullBath)) + geom_jitter(alpha=1/5) +
+  scale_x_continuous(breaks=0:16, minor_breaks=NULL) +
+  scale_y_continuous(breaks=0:12, minor_breaks=NULL) 
 
 # line graphs are nice for connecting dots and showing a trend over time.
 
@@ -324,7 +348,13 @@ ggplot(years, aes(x=YearBuilt, y=Freq)) + geom_line() +
 # what year was the spike?
 subset(years, Freq > 800)
 
-# We can add the year to the plot using geom_text:
+# we can add the year to the plot using annotate()
+ggplot(years, aes(x=YearBuilt, y=Freq)) + geom_line() +
+  scale_x_continuous(breaks=seq(1700,2000,50)) +
+  labs(x="Year",y="Number of Homes") +
+  annotate("text", x = 1985, y = 800, label = "1973") 
+
+# We can also add the year to the plot using geom_text:
 ggplot(years, aes(x=YearBuilt, y=Freq)) + geom_line() +
   scale_x_continuous(breaks=seq(1700,2000,50)) +
   labs(x="Year",y="Number of Homes") +
@@ -333,8 +363,8 @@ ggplot(years, aes(x=YearBuilt, y=Freq)) + geom_line() +
 # You can define data and aesthetics in geoms!
 
 # Quick demo
-dat <- data.frame(a = 1:4, b = 4:1)
-dat2 <- data.frame(c = 5:2, d = 2:5)
+dat <- data.frame(a = 1:4, b = 2:5)
+dat2 <- data.frame(c = 5:2, d = 5:2)
 ggplot(dat, aes(x = a, y = b)) + 
   geom_point() +
   geom_line(data=dat2, aes(x = c, y = d))
@@ -345,30 +375,34 @@ ggplot(dat, aes(x = a, y = b)) +
 # the stat_summary() function is useful for summarizing y values for unique x 
 # values. The basic usage is to supply a function to the fun.y argument.
 
-# Let's say I want to plot the mean TotalValue per YearBuilt on top of a
-# scatterplot of TotalValue vs YearBuilt. 
-ggplot(homes, aes(x=YearBuilt, y=TotalValue)) + geom_point() +
+# Let's say I want to plot the mean TotalValue per YearBuilt:
+ggplot(homes, aes(x=YearBuilt, y=TotalValue)) +
   stat_summary(fun.y="mean", colour="red", geom="point")
 
-# zoom in on plot
-ggplot(homes, aes(x=YearBuilt, y=TotalValue)) + geom_point() +
+# we could also do it over a scatter plot of TotalValue vs YearBuilt
+ggplot(homes, aes(x=YearBuilt, y=TotalValue)) + 
+  geom_point() +
+  stat_summary(fun.y="mean", colour="red", geom="point")
+
+# zoom in on 1950 - 2015
+ggplot(homes, aes(x=YearBuilt, y=TotalValue)) + 
+  geom_point(shape=".") +
   stat_summary(fun.y="mean", colour="red", geom="point") +
   coord_cartesian(xlim=c(1950,2016), ylim=c(0,1e6))
 # worth noting we're just zooming; the mean still calculated using values
 # outside of view.
 
-# let's jitter the points, make them smaller and make summery point bigger
+# let's jitter the points and make summery point bigger
 ggplot(homes, aes(x=YearBuilt, y=TotalValue)) + 
   geom_point(position=position_jitter(w=0.2,h=0), shape=".") +
   stat_summary(fun.y="mean", colour="red", geom="point", size=3) +
   coord_cartesian(xlim=c(1950,2016), ylim=c(0,1e6))
 
-# we can add multiple summaries, like median and trimmed mean
+# we can add the median 
 ggplot(homes, aes(x=YearBuilt, y=TotalValue)) + 
   geom_point(position=position_jitter(w=0.2,h=0), shape=".") +
-  stat_summary(fun.y="mean", colour="red", geom="point", size=3) +
-  stat_summary(fun.y="median", colour="blue", geom="point", size=3) +
-  stat_summary(fun.y="mean", colour="orange", geom="point", size=3, trim=0.1) +
+  stat_summary(fun.y="mean", colour="red", geom="line") +
+  stat_summary(fun.y="median", colour="blue", geom="line") +
   coord_cartesian(xlim=c(1950,2016), ylim=c(0,1e6))
 
 # FullBaths vs YearBuilt
@@ -384,7 +418,8 @@ ggplot(homes, aes(x=YearBuilt, y=FullBath)) +
   geom_jitter(alpha=1/8) +
   coord_cartesian(xlim=c(1950,2016), ylim=c(0,6)) +
   stat_summary(fun.y="mean", color="red", geom="line", size=2) +
-  scale_y_continuous(breaks=0:6)
+  scale_y_continuous(breaks=0:6) +
+  scale_x_continuous(breaks=seq(1960,2010,10))
 
 
 # can also add summary stats manually
@@ -439,19 +474,21 @@ chick2 <- data.frame(feed=names(fMean), fMean, fSE, row.names = NULL)
 
 # now add mean and error bars
 sc + geom_point(data=chick2, aes(x=feed, y=fMean), color="red", size=3) +
-  geom_errorbar(data=chick2, aes(x=feed, y=fMean, 
+  geom_errorbar(data=chick2, aes(x=feed, y=fMean,
                                  ymin=fMean - 2*fSE, 
                                  ymax=fMean + 2*fSE), 
                 width=0.1, color="red") +
-  labs(title="Mean Weight by Feed Type with 2*SE Bars")
+  labs(title="Mean Weight by Feed Type with 2*SE error bars")
 
 # another way using stat_summary; fun.data="mean_cl_normal" actually calls the 
 # function smean.cl.normal() from the Hmisc package. It uses the t distribution
 # to determine the multiplier of the standard error.
 ggplot(chickwts, aes(x=feed, y=weight)) + 
   geom_point(position = position_jitter(w = 0.1, h = 0)) +
-  stat_summary(fun.data="mean_cl_normal", color="red", geom="errorbar", width=0.1) +
-  stat_summary(fun.y = mean, geom="point", color="red", size=3)
+  stat_summary(fun.data = "mean_cl_normal", color="red", geom="errorbar", width=0.1) +
+  stat_summary(fun.y = "mean", geom="point", color="red", size=3) +
+  labs(title="Mean Weight by Feed Type with 95% error bars")
+
 
 
 # single line graph of means at each time point with SE bars
@@ -495,8 +532,8 @@ ggplot(Indometh, aes(x=time,y=conc)) +
 url <- "http://people.virginia.edu/~jcf2d/workshops/ggplot2/bison-Cougar-20150520-172801.csv"
 cougar <- read.csv(url)
 
-install.packages("maps")
-install.packages("mapproj")
+# install.packages("maps")
+# install.packages("mapproj")
 
 library(maps)
 library(mapproj) # for the "polyconic" option
@@ -506,7 +543,7 @@ library(mapproj) # for the "polyconic" option
 # first create a data frame of map data; "state" is the name of a map provided
 # by the maps package.
 states <- map_data("state")
-# rename providedState to "region and make lower case for purposes of merging
+# rename providedState to "region" and make lower case for purposes of merging
 cougar$region <- tolower(cougar$providedState)
 # merge states and courgar data frames by region
 cougmap <- merge(states, subset(cougar, !is.na(decimalLongitude)), by = "region")
@@ -519,7 +556,6 @@ ggplot(cougmap, aes(x=long, y=lat)) +
   borders("state") +
   geom_point(aes(x = decimalLongitude, y=decimalLatitude, color=basisOfRecord)) +
   coord_map("polyconic")
-
 
 # saving graphs as images
 

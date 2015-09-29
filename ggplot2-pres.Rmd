@@ -6,14 +6,6 @@ output: beamer_presentation
 ---
 
 
-## Getting Started
-
-- ggplot2 is not included with base R; it has to be installed:       
-  `install.packages("ggplot2")`
-  
-- Once installed, you need to load it once per R session if you want to use it:   
-  `library(ggplot2)`
-
 ## About ggplot2
 
 - Developed by Hadley Wickham in 2005
@@ -28,15 +20,15 @@ output: beamer_presentation
 
 The *Grammar of Graphics* boiled down to 5 bullets, courtesy of Wickham (2009):
 
-- A statistical graphic is a mapping from data to aesthetic attributes (location, color, shape, size) of geometric objects (points, lines, bars). 
+- a statistical graphic is a mapping from data to **aes**thetic attributes (location, color, shape, size) of **geom**etric objects (points, lines, bars). 
 
-- The geometric objects are drawn in a specific coordinate system.
+- the geometric objects are drawn in a specific **coord**inate system.
 
-- Scales control the mapping from data to aesthetics and provide tools to read the plot (ie, axes and legends).
+- **scale**s control the mapping from data to aesthetics and provide tools to read the plot (ie, axes and legends).
 
-- The plot may also contain statistical transformations of the data (means, medians, bins of data, trend lines).
+- the plot may also contain **stat**istical transformations of the data (means, medians, bins of data, trend lines).
 
-- Faceting can be used to generate the same plot for different subsets of the data.
+- **facet**ing can be used to generate the same plot for different subsets of the data.
 
 ## The Grammar of Graphics - illustration
 
@@ -232,7 +224,7 @@ ggplot(iris, aes(x=Petal.Width, y=Petal.Length)) +
 
 When consulting the documentation for a particular geom, you'll see examples using arguments not defined on that help page.
 
-To find out what those arguments do, you need to view the associated stat help page.
+To find out what those arguments do, you often need to view the associated stat help page.
 
 For example, `geom_smooth(method="lm")`; the `method` argument is documented on the `stat_smooth` help page.
 
@@ -285,9 +277,6 @@ Chang, W. (2013), _R Graphics Cookbook_, O'Reilly.
 
 **ggplot2 cheat sheet**    
 http://www.rstudio.com/wp-content/uploads/2015/04/ggplot2-cheatsheet.pdf
-
-**R Graph Catalog**   
-http://shinyapps.stat.ubc.ca/r-graph-catalog/
 
 **Cookbook for R - Graphs**   
 http://www.cookbook-r.com/Graphs/
