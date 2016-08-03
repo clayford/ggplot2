@@ -56,12 +56,13 @@ str(homes)
 # The histogram helps us see how a continous variable is distributed
 ggplot(homes, aes(x=FinSqFt)) + geom_histogram()
 
-# note the message regarding "stat_bin"
-# Recall "stat_bin" is the stat for geom_histogram
-# What is range/30?
-diff(range(homes$FinSqFt))/30
+# note the message regarding "stat_bin".
+# Recall "stat_bin" is the stat for geom_histogram.
 
-# with a new binwidth
+# Says the documentation: "You should always override this value, exploring
+# multiple widths to find the best to illustrate the stories in your data."
+
+# Try a new binwidth
 ggplot(homes, aes(x=FinSqFt)) + geom_histogram(binwidth=50)
 # try some others!
 
@@ -116,9 +117,8 @@ ggplot(subset(homes, Condition %in% c("Excellent","Good","Average")),
 
 ####################################
 # YOUR TURN! Create a histogram of TotalValue, the total value of the home.
-# What's a good bandwidth?
-ggplot(homes, aes(x=TotalValue)) + geom_histogram(binwidth=1e5)
-diff(range(homes$TotalValue))/30
+# Try some different bandwidths.
+
 
 ####################################
 
@@ -147,16 +147,16 @@ ggplot(homes, aes(x=Condition, fill=factor(Remodeled))) +
 ggplot(homes, aes(x=Condition, fill=factor(Remodeled))) + 
   geom_bar(position = "dodge") +
   scale_fill_discrete(name="Remodeled") +
-  scale_x_discrete(limits=c("Excellent","Good","Average","Fair","Poor"))
+  scale_x_discrete(limits=c("Excellent","Good","Average","Fair","Poor","Substandard"))
 
-# By default, the stat for geom_bar (stat_bin) counts up things in your data 
+# By default, the stat for geom_bar (stat_count) counts up things in your data 
 # frame. What if you already have counts? Use stat ="identity" (stat_identity)
 # and map value to y aesthetic. Let's make a bar plot for remodeled homes.
 remod <- as.data.frame(table(homes$Remodeled))
 class(remod)
 remod
 
-# without stat="identity" - error and a long message
+# without stat="identity" - error 
 ggplot(remod, aes(x=Var1, y=Freq)) + geom_bar()
 
 # with stat="identity"
@@ -170,11 +170,12 @@ ggplot(remod, aes(x=Var1, y=Freq)) +
   labs(x=NULL, y="Number of Homes", 
        title="Number of remodeled versus original homes in Charlottesville")
 
-# and it's worth noting the above examples was contrived to demonstrate the 
-# difference between stat_bin and stat_identity'. Below stat="bin" is the
-# default; we don't need to include it.
+# and it's worth noting the above example was contrived to demonstrate the 
+# difference between stat_bin and stat_identity'. We could have used our raw 
+# data to create the same plot. Below stat="count" is the default; we don't need
+# to include it.
 ggplot(homes, aes(x=factor(Remodeled))) + 
-  geom_bar(stat="bin", width=0.5) +
+  geom_bar(stat="count", width=0.5) +
   scale_x_discrete(labels=c("Original","Remodeled")) +
   labs(x=NULL, y="Number of Homes", 
        title="Number of remodeled versus original homes in Charlottesville")
@@ -240,7 +241,7 @@ p3 <- p3 +
 p3
 # We can add a smooth line through our scatterplots with geom_smooth()
 p3 + geom_smooth()
-# lots of warnings, probably due to Substandard only have 3 obs;
+# warning due to Substandard only having 3 obs;
 # let's just try fitting a straight linear regression line
 p3 + geom_smooth(method="lm")
 p3 + geom_smooth(method="lm", se=FALSE)
@@ -260,12 +261,20 @@ p3 %+%
 
 # Log Transformations in scatter plots
 
-# Dollar amounts are often log transformed. Maybe try log base 10 transformation
-# directly:
+# Dollar amounts are often log transformed. It helps "squeeze together" the 
+# large values and "spread out" the small values.
+
+# before log transformation:
+ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point()
+
+# Maybe try log base 10 transformation directly:
 ggplot(homes, aes(x=log10(FinSqFt), y=log10(TotalValue))) + geom_point()
 
-# can use scale functions to both transform data and map scales to original data
-# space:
+# The scale of the axes is on the log10 scale because the data has been
+# transformed.
+
+# We can use scale functions to both transform the data and map the scale of the
+# axes to the original data.
 ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point(alpha=1/5) +
   scale_x_log10(labels=comma) + scale_y_log10(labels=dollar)
 
@@ -329,10 +338,12 @@ ggplot(homes, aes(x=Bedroom,y=FullBath)) + geom_jitter(alpha=1/5) +
 
 # line graphs are nice for connecting dots and showing a trend over time.
 
-# plot number of houses built per year
+# plot number of houses built per year; 
+# dnn="YearBuilt" simply names the column containg the years
 years <- as.data.frame(table(homes$YearBuilt, dnn="YearBuilt"), 
                            stringsAsFactors = FALSE)
 str(years)
+# make YearBuilt numeric
 years$YearBuilt <- as.numeric(years$YearBuilt)
 
 # now use geom_line()
@@ -363,6 +374,11 @@ ggplot(years, aes(x=YearBuilt, y=Freq)) + geom_line() +
 # Quick demo
 dat <- data.frame(a = 1:4, b = 2:5)
 dat2 <- data.frame(c = 5:2, d = 5:2)
+dat; dat2
+# plot with dat
+ggplot(dat, aes(x = a, y = b)) + 
+  geom_point() 
+# plot with dat and dat2
 ggplot(dat, aes(x = a, y = b)) + 
   geom_point() +
   geom_line(data=dat2, aes(x = c, y = d))
@@ -508,6 +524,7 @@ tSE <- tapply(Indometh$conc, Indometh$time, function(x)sd(x)/sqrt(length(x)))
 
 # ggplot requires data in data frame
 Indo2 <- data.frame(time=unique(Indometh$time), tMean, tSE, row.names = NULL)
+Indo2
 
 # now ready to create plot
 ggplot(Indo2, aes(x=time,y=tMean)) +
