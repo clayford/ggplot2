@@ -1,8 +1,10 @@
 ---
 title: "R Graphics with ggplot2"
 author: "Clay Ford"
-date: "Fall 2015"
-output: beamer_presentation
+date: "Fall 2016"
+output: 
+    beamer_presentation: 
+        fig_caption: false
 ---
 
 
@@ -14,7 +16,7 @@ output: beamer_presentation
 
 - does not create interactive or 3D graphics
 
-- As of February 2014, officially in maintenance mode, meaning no new features will be added
+- ~~As of February 2014, officially in maintenance mode, meaning no new features will be added.~~ ggplot2 2.0 released in Dec 2015 with over 100 fixes and improvements. 
   
 ## The Grammar of Graphics
 
@@ -73,8 +75,7 @@ sebastianraschka.com/Images_old/2014_python_lda/
 ```{r, message=FALSE, fig.height=3, fig.width=6}
 library(ggplot2) # once per session
 ggplot(iris, aes(x = Petal.Width, y = Sepal.Width, 
-                 color=Species)) + 
-  geom_point() 
+                 color=Species)) + geom_point() 
 ```
 
 
@@ -113,14 +114,13 @@ ggplot(iris, aes(x = Species, y = Sepal.Width)) +
 
 ## Moving beyond `ggplot` + `geoms`
 
-A natural next step in exploratory graphing is to create plots of subsets of data. These are called facets in ggplot2.
+* A natural next step in exploratory graphing is to create plots of subsets of data. These are called facets in ggplot2.
 
-Use `facet_wrap()` if you want to facet by one variable and have `ggplot2` control the layout.    
+* Use `facet_wrap()` if you want to facet by one variable and have `ggplot2` control the layout. Example:   
 
-Example:   
-+ `facet_wrap( ~ var)`
+     + `+ facet_wrap( ~ var)`
 
-Use `facet_grid()` if you want to facet by one and/or two variables and control layout yourself.     
+- Use `facet_grid()` if you want to facet by one and/or two variables and control layout yourself.     
 
 Examples:    
 + `facet_grid(. ~ var1)` - facets in columns   
@@ -157,17 +157,16 @@ ggplot(iris, aes(x = Petal.Width)) +
 
 ## Customizing scales
 
-Scales control the mapping from data to aesthetics and provide tools to read the plot (ie, axes and legends).
+* Scales control the mapping from data to aesthetics and provide tools to read the plot (ie, axes and legends).
 
-Every aesthetic has a default scale. To add or modify a scale, use a `scale` function. 
+* Every aesthetic has a default scale. To add or modify a scale, use a `scale` function. 
 
-All scale functions have a common naming scheme: 
-
+* All scale functions have a common naming scheme:
 `scale` `_` name of aesthetic `_` name of scale
 
-Examples: `scale_y_continuous`, `scale_color_discrete`, `scale_fill_manual`
+* Examples: `scale_y_continuous`, `scale_color_discrete`, `scale_fill_manual`
 
-Heads up: The documentation for `ggplot2` scale functions will frequently use functions from the `scales` package (also by Wickham)!
+* Heads up: The documentation for `ggplot2` scale functions will frequently use functions from the `scales` package (also by Wickham)!
 
 ## ggplot2 example - update scale for y-axis
 
@@ -191,15 +190,15 @@ ggplot(iris, aes(x = Petal.Width, y = Sepal.Width,
 
 ## stat functions
 
-All `geoms` perform a default statistical transformation. 
+- All `geoms` perform a default statistical transformation. 
 
-For example, `geom_histogram()` bins the data before plotting. `geom_smooth()` fits a line through the data according to a specified method.
+- For example, `geom_histogram()` bins the data before plotting. `geom_smooth()` fits a line through the data according to a specified method.
 
-In many cases the transformation is the "identity", which just means plot the raw data. For example, `geom_point()`
+- In some cases the transformation is the "identity", which just means plot the raw data. For example, `geom_point()`
 
-These transformations are done by `stat` functions. The naming scheme is `stat_` followed by the name of the transformation. For example, `stat_bin`, `stat_smooth`, `stat_boxplot`
+- These transformations are done by `stat` functions. The naming scheme is `stat_` followed by the name of the transformation. For example, `stat_bin`, `stat_smooth`, `stat_boxplot`
 
-**Every geom has a default stat, every stat has a default geom.**
+- **Every geom has a default stat, every stat has a default geom.**
 
 
 ## ggplot2 example - geom using default stat
@@ -220,21 +219,21 @@ ggplot(iris, aes(x=Petal.Width, y=Petal.Length)) +
 
 ## Why should I care about `stat` versus `geom`?
 
-**The stat and geom functions can use each other's arguments.**
+- **The stat and geom functions can use each other's arguments.**
 
-When consulting the documentation for a particular geom, you'll see examples using arguments not defined on that help page.
+- When consulting the documentation for a particular `geom`, you'll notice there is also documentation for an associated `stat`, and vice versa.
 
-To find out what those arguments do, you often need to view the associated stat help page.
+- An exception is `geom_point` and `stat_identity`.
 
-For example, `geom_smooth(method="lm")`; the `method` argument is documented on the `stat_smooth` help page.
+- Understanding hows geoms and statistical transformations work together in ggplot2 can help you master the syntax faster.
 
 ## Update themes and labels
 
-The default ggplot2 theme is excellent. It follows the advice of several landmark papers regarding statistics and visual perception. (Wickham 2009, p. 141)
+* The default ggplot2 theme is excellent. It follows the advice of several landmark papers regarding statistics and visual perception. (Wickham 2009, p. 141)
 
-However you can change the theme using ggplot2's themeing system. To date, there are six built-in themes: `theme_gray` (_default_), `theme_bw`, `theme_linedraw`, `theme_light`, `theme_minimal`, `theme_classic`
+* However you can change the theme using ggplot2's themeing system. To date, there are seven built-in themes: `theme_gray` (_default_), `theme_bw`, `theme_linedraw`, `theme_light`, `theme_dark`, `theme_minimal`, `theme_classic`
 
-You can also update axis labels and titles using the `labs` function.
+* You can also update axis labels and titles using the `labs` function.
 
 ## ggplot2 example - update labels
 
@@ -269,11 +268,11 @@ Let's go to R!
 
 ## References
 
-Wickham, H. (2009), _ggplot2: Elegant Graphics for Data Analysis_, Springer.
+* Wickham, H. (2016), _ggplot2: Elegant Graphics for Data Analysis_ (2nd ed), Springer.
 
-Wickham, H. (2010), "A Layered Grammar of Graphics", _Journal of Computational and Graphical Statistics_, Volume 19, Number 1.
+* Wickham, H. (2010), "A Layered Grammar of Graphics", _Journal of Computational and Graphical Statistics_, Volume 19, Number 1.
 
-Chang, W. (2013), _R Graphics Cookbook_, O'Reilly.
+* Chang, W. (2013), _R Graphics Cookbook_, O'Reilly.
 
 **ggplot2 cheat sheet**    
 http://www.rstudio.com/wp-content/uploads/2015/04/ggplot2-cheatsheet.pdf
@@ -286,14 +285,14 @@ http://ggplot2.org/
 
 ## StatLab
 
-Thanks for coming today!
+* Thanks for coming today!
 
-For help and advice with your data analysis, contact StatLab to set up an appointment: statlab@virginia.edu
+* For help and advice with your data analysis, contact StatLab to set up an appointment: statlab@virginia.edu
 
-Sign up for more workshops or see past workshops:
-http://data.library.virginia.edu/statlab/
+* Sign up for more workshops or see past workshops:
+http://data.library.virginia.edu/training/
 
-Register for the Research Data Services newsletter to stay up-to-date on StatLab events and resources: http://data.library.virginia.edu/newsletters/
+* Register for the Research Data Services newsletter to stay up-to-date on StatLab events and resources: http://data.library.virginia.edu/newsletters/
 
 
 

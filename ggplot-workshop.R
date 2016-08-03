@@ -62,7 +62,7 @@ ggplot(homes, aes(x=FinSqFt)) + geom_histogram()
 diff(range(homes$FinSqFt))/30
 
 # with a new binwidth
-ggplot(homes, aes(x=FinSqFt)) + geom_histogram(binwidth=250)
+ggplot(homes, aes(x=FinSqFt)) + geom_histogram(binwidth=50)
 # try some others!
 
 # what if we want a "True" Histogram with density instead of count?
@@ -82,7 +82,7 @@ ggplot(homes, aes(x=FinSqFt, y=..density..)) +
 # Before we go further, important to note we can save a plot object and add to
 # it:
 p <- ggplot(homes, aes(x=FinSqFt, y=..density..))
-p # nothing to see, n0 layers
+p # nothing to see, no layers
 p + geom_histogram(binwidth=300)
 
 # And now try geom_density()
@@ -117,7 +117,8 @@ ggplot(subset(homes, Condition %in% c("Excellent","Good","Average")),
 ####################################
 # YOUR TURN! Create a histogram of TotalValue, the total value of the home.
 # What's a good bandwidth?
-ggplot(homes, aes(x=TotalValue)) + geom_histogram() + xlim(c(0,1e6))
+ggplot(homes, aes(x=TotalValue)) + geom_histogram(binwidth=1e5)
+diff(range(homes$TotalValue))/30
 
 ####################################
 
@@ -215,9 +216,9 @@ p3
 
 
 #################################### 
-# YOUR TURN! Plot FinSqFt vs. YearBuilt. Put FinSqFt on the y axis. Facet by
-# Condition. Perhaps try an alpha setting?
-ggplot(homes, aes(x=YearBuilt, y=FinSqFt)) + geom_point(alpha=1/8) +
+# YOUR TURN! Plot FinSqFt vs. YearBuilt. Put FinSqFt on the y axis. 
+# Facet by Condition. Perhaps try an alpha setting?
+ggplot(homes, aes(y=FinSqFt, x=YearBuilt)) + geom_point(alpha=1/6) +
   facet_wrap(~ Condition)
 
 
@@ -233,7 +234,9 @@ p3
 # typically used in a scale function with the labels argument.
 
 library(scales)
-p3 <- p3 + scale_y_continuous(labels=dollar) + scale_x_continuous(labels=comma)
+p3 <- p3 + 
+  scale_y_continuous(labels=dollar) + 
+  scale_x_continuous(labels=comma)
 p3
 # We can add a smooth line through our scatterplots with geom_smooth()
 p3 + geom_smooth()
@@ -289,8 +292,7 @@ ggplot(subset(homes, TotalValue < 1e6),
 
 ####################################
 # YOUR TURN! Make a boxplot of FinSqFt by HalfBath. 
-ggplot(homes, aes(x=factor(HalfBath), y=FinSqFt)) + geom_boxplot() +
-  scale_y_continuous(labels=comma)
+ggplot(homes, aes(x=factor(HalfBath), y=FinSqFt)) + geom_boxplot()
 
 
 
@@ -324,10 +326,6 @@ ggplot(homes, aes(x=Bedroom,y=FullBath)) + geom_jitter(alpha=1/5) +
   scale_x_continuous(breaks=0:16, minor_breaks=NULL) +
   scale_y_continuous(breaks=0:12, minor_breaks=NULL)
 
-# scales could be better...
-ggplot(homes, aes(x=Bedroom,y=FullBath)) + geom_jitter(alpha=1/5) +
-  scale_x_continuous(breaks=0:16, minor_breaks=NULL) +
-  scale_y_continuous(breaks=0:12, minor_breaks=NULL) 
 
 # line graphs are nice for connecting dots and showing a trend over time.
 
