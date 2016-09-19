@@ -1,5 +1,5 @@
 # R Graphics with ggplot2
-# Fall 2015
+# Fall 2016
 # UVa StatLab
 # Clay Ford
 
@@ -24,28 +24,23 @@ install.packages("gridExtra") # to fit multiple plots in a window
 # package is also installed
 
 library(ggplot2)
-
+library(dplyr)
 
 # Data --------------------------------------------------------------------
 
-# Albemarle County real estate data
-# Addresses with City identified as "Charlottesville"
-# Downloaded from Office of Geographic Data Services, 15-Sept-2015
+# Albemarle County real estate data with City identified as "CHARLOTTESVILLE",
+# "EARLYSVILLE", "CROZET", "NORTH GARDEN","SCOTTSVILLE", "KESWICK"
 
-# Primary Card Level Data - this file includes data such as year built, 
-# finished square footage, number of rooms, and condition.
-# http://www.albemarle.org/gds/gisdata/CAMA/CAMA_CardLevelData_TXT.zip
+# Downloaded from Office of Geographic Data Services, 19-Sept-2016
+# http://www.albemarle.org/department.asp?department=gds&relpage=3914#Parcels
 
-# merged with...
+# R script to download and prepare data:
+# https://github.com/clayford/ggplot2/blob/master/albemarle_county_homes.R
 
-# Real Estate Information - Parcel Level Data.  This file contains information
-# about the parcel itself such as assessed value
-# http://www.albemarle.org/gds/gisdata/CAMA/CAMA_ParcelInfo_TXT.zip
-
-homes <- read.csv("data/cville_real_estate.csv")
+homes <- read.csv("albemarle_real_estate.csv")
 
 # or download and read in:
-url1 <- "http://people.virginia.edu/~jcf2d/workshops/ggplot2/cville_real_estate.csv"
+url1 <- "http://people.virginia.edu/~jcf2d/workshops/ggplot2/albemarle_real_estate.csv"
 homes <- read.csv(url1)
 class(homes) # data.frame
 
@@ -62,9 +57,10 @@ ggplot(homes, aes(x=FinSqFt)) + geom_histogram()
 # Says the documentation: "You should always override this value, exploring
 # multiple widths to find the best to illustrate the stories in your data."
 
-# Try a new binwidth
+# Try a new binwidth or bins
 ggplot(homes, aes(x=FinSqFt)) + geom_histogram(binwidth=50)
-# try some others!
+ggplot(homes, aes(x=FinSqFt)) + geom_histogram(bins = 40)
+# try some others! Beware, setting small binwidths can tax your computer.
 
 # what if we want a "True" Histogram with density instead of count?
 ggplot(homes, aes(x=FinSqFt, y=..density..)) + 
@@ -116,8 +112,12 @@ ggplot(subset(homes, Condition %in% c("Excellent","Good","Average")),
   
 
 ####################################
-# YOUR TURN! Create a histogram of TotalValue, the total value of the home.
-# Try some different bandwidths.
+# YOUR TURN! 
+
+# (1) Create a histogram of TotalValue, the total value of the home.
+# Try some different bandwidths, say bins = 50 or binwidth = 50000:
+
+# (2) Repeat #1, but now facet by City
 
 
 ####################################
@@ -143,10 +143,11 @@ ggplot(homes, aes(x=Condition, fill=factor(Remodeled))) +
   geom_bar(position = "dodge")
 
 # How can we fix the legend title?
-# Recall that is a by-product of the scale. So we need to use a scale function.
+# Recall that is a by-product of the fill scale. So we need to use a scale
+# function.
 ggplot(homes, aes(x=Condition, fill=factor(Remodeled))) + 
   geom_bar(position = "dodge") +
-  scale_fill_discrete(name="Remodeled") +
+  scale_fill_discrete(name="Remodeled", labels = c("Original","Remodeled")) +
   scale_x_discrete(limits=c("Excellent","Good","Average","Fair","Poor","Substandard"))
 
 # By default, the stat for geom_bar (stat_count) counts up things in your data 
@@ -156,7 +157,7 @@ remod <- as.data.frame(table(homes$Remodeled))
 class(remod)
 remod
 
-# without stat="identity" - error 
+# without stat="identity" we get an error 
 ggplot(remod, aes(x=Var1, y=Freq)) + geom_bar()
 
 # with stat="identity"
@@ -168,7 +169,7 @@ ggplot(remod, aes(x=Var1, y=Freq)) +
   geom_bar(stat="identity", width=0.5) + 
   scale_x_discrete(labels=c("Original","Remodeled")) +
   labs(x=NULL, y="Number of Homes", 
-       title="Number of remodeled versus original homes in Charlottesville")
+       title="Number of remodeled versus original homes")
 
 # and it's worth noting the above example was contrived to demonstrate the 
 # difference between stat_bin and stat_identity'. We could have used our raw 
@@ -178,7 +179,7 @@ ggplot(homes, aes(x=factor(Remodeled))) +
   geom_bar(stat="count", width=0.5) +
   scale_x_discrete(labels=c("Original","Remodeled")) +
   labs(x=NULL, y="Number of Homes", 
-       title="Number of remodeled versus original homes in Charlottesville")
+       title="Number of remodeled versus original homes")
 
 
 # Two variables -----------------------------------------------------------
@@ -219,13 +220,13 @@ p3
 #################################### 
 # YOUR TURN! Plot FinSqFt vs. YearBuilt. Put FinSqFt on the y axis. 
 # Facet by Condition. Perhaps try an alpha setting?
-ggplot(homes, aes(y=FinSqFt, x=YearBuilt)) + geom_point(alpha=1/6) +
-  facet_wrap(~ Condition)
 
 
 ####################################
 
-# Look again at our p3 plot:
+# Look again at our p3 plot, except let's set the scales to match, (ie, do
+# facet_wrap without scales = "free"):
+p3 <- p3 + facet_wrap(~ Condition)
 p3
 # The y-axis scale would look better formatted as dollar amounts. The scales
 # package can help with this. It has functions designed for this type of
@@ -239,24 +240,40 @@ p3 <- p3 +
   scale_y_continuous(labels=dollar) + 
   scale_x_continuous(labels=comma)
 p3
+
 # We can add a smooth line through our scatterplots with geom_smooth()
 p3 + geom_smooth()
-# warning due to Substandard only having 3 obs;
+# warning due to Substandard only having only a few obs;
 # let's just try fitting a straight linear regression line
 p3 + geom_smooth(method="lm")
+
+# turn off the confidence intervals
 p3 + geom_smooth(method="lm", se=FALSE)
 
-# we can also specify our own formula; compare a quadratic fit with the 
-# nonparametric smooth line
+# We can add both smooth and straight lines
 p3 + geom_smooth(se=FALSE, color="red") +
-  geom_smooth(method="lm", se=FALSE, formula= y ~ poly(x,2)) 
+  geom_smooth(method="lm", se=FALSE)
 
-# The errors are annoying; let's remove the Substandard homes;
+# But notice ggplot2 does not create a legend for us identifying the lines!
+# That's because the lines are created from statistical transformations of the
+# data. There's nothing to map the color of the lines to in the data.
+  
+# However we can force a legend by defining a color aesthetic in each geom:
+p3 + geom_smooth(aes(color = "smooth"), se=FALSE) +
+  geom_smooth(aes(color = "linear"), method="lm", se=FALSE)
+
+# And then we can customize the legend if we like
+p3 + geom_smooth(aes(color = "smooth"), se=FALSE) +
+  geom_smooth(aes(color = "linear"), method="lm", se=FALSE) +
+  scale_color_manual("Fitted Lines", values = c("blue","red"))
+
+# Let's just look at Average, Excellent and Good homes.
 # We can replace the data frame using the %+% operator
 p3 %+% 
-  subset(homes, Condition!="Substandard") + 
-  geom_smooth(se=FALSE, color="red") +
-  geom_smooth(method="lm", se=FALSE, formula= y ~ poly(x,2)) 
+  subset(homes, Condition %in% c("Average","Excellent","Good")) + 
+  geom_smooth(aes(color = "smooth"), se=FALSE) +
+  geom_smooth(aes(color = "linear"), method="lm", se=FALSE) +
+  scale_color_manual("Fitted Lines", values = c("blue","red"))
 
 
 # Log Transformations in scatter plots
@@ -291,8 +308,24 @@ p4 + geom_boxplot()
 p4 + geom_boxplot() + scale_y_continuous(labels=dollar)
 # $9,000,000 homes with only two full baths?
 
+# facet by Condition
 p4 + geom_boxplot() + scale_y_continuous(labels=dollar) + 
   facet_wrap(~Condition) + labs(x = "Number of Full Baths")
+
+# facet by City
+p4 + geom_boxplot() + scale_y_continuous(labels=dollar) + 
+  facet_wrap(~City) + labs(x = "Number of Full Baths")
+
+# facet by City and Condition
+p4 + geom_boxplot() + scale_y_continuous(labels=dollar) + 
+  facet_grid(Condition ~ City) + labs(x = "Number of Full Baths")
+
+# facet by City and Condition - filter out "Substandard" and "Poor"
+p4 %+%
+  subset(homes, !Condition %in% c("Substandard", "Poor")) + 
+  geom_boxplot() + scale_y_continuous(labels=dollar) + 
+  facet_grid(Condition ~ City) + labs(x = "Number of Full Baths")
+
 
 # Just look at homes under $1,000,000
 ggplot(subset(homes, TotalValue < 1e6), 
@@ -301,7 +334,7 @@ ggplot(subset(homes, TotalValue < 1e6),
 
 ####################################
 # YOUR TURN! Make a boxplot of FinSqFt by HalfBath. 
-ggplot(homes, aes(x=factor(HalfBath), y=FinSqFt)) + geom_boxplot()
+
 
 
 
@@ -313,8 +346,9 @@ ggplot(homes, aes(x=factor(HalfBath), y=FinSqFt)) + geom_boxplot()
 
 # 0 bedroom houses (?)
 homes0 <- subset(homes, Bedroom==0)
+nrow(homes0)
 
-# plot total value per Number of Full Baths
+# plot total value per Number of Full Baths for homes with 0 bedrooms
 ggplot(homes0, aes(x=factor(FullBath), y=TotalValue)) + 
   geom_point(position = position_jitter(w = 0.1, h = 0)) +
   scale_y_continuous(labels=dollar)
@@ -333,18 +367,18 @@ ggplot(homes, aes(x=Bedroom,y=FullBath)) + geom_jitter()
 # scales could be better...
 ggplot(homes, aes(x=Bedroom,y=FullBath)) + geom_jitter(alpha=1/5) +
   scale_x_continuous(breaks=0:16, minor_breaks=NULL) +
-  scale_y_continuous(breaks=0:12, minor_breaks=NULL)
+  scale_y_continuous(breaks=0:14, minor_breaks=NULL)
 
 
 # line graphs are nice for connecting dots and showing a trend over time.
 
 # plot number of houses built per year; 
-# dnn="YearBuilt" simply names the column containg the years
-years <- as.data.frame(table(homes$YearBuilt, dnn="YearBuilt"), 
-                           stringsAsFactors = FALSE)
+# need to count up number of homes by YearBuilt
+years <- homes %>% 
+  group_by(YearBuilt) %>% 
+  summarise(Freq = n())
+
 str(years)
-# make YearBuilt numeric
-years$YearBuilt <- as.numeric(years$YearBuilt)
 
 # now use geom_line()
 ggplot(years, aes(x=YearBuilt, y=Freq)) + geom_line()
@@ -363,25 +397,6 @@ ggplot(years, aes(x=YearBuilt, y=Freq)) + geom_line() +
   labs(x="Year",y="Number of Homes") +
   annotate("text", x = 1985, y = 800, label = "1973") 
 
-# We can also add the year to the plot using geom_text:
-ggplot(years, aes(x=YearBuilt, y=Freq)) + geom_line() +
-  scale_x_continuous(breaks=seq(1700,2000,50)) +
-  labs(x="Year",y="Number of Homes") +
-  geom_text(data = NULL, x = 1985, y = 800, label = "1973")
-# why data = NULL? Tell geom_text not to use the data defined in ggplot().
-# You can define data and aesthetics in geoms!
-
-# Quick demo
-dat <- data.frame(a = 1:4, b = 2:5)
-dat2 <- data.frame(c = 5:2, d = 5:2)
-dat; dat2
-# plot with dat
-ggplot(dat, aes(x = a, y = b)) + 
-  geom_point() 
-# plot with dat and dat2
-ggplot(dat, aes(x = a, y = b)) + 
-  geom_point() +
-  geom_line(data=dat2, aes(x = c, y = d))
 
 
 # Plotting statistical summaries ------------------------------------------
@@ -412,7 +427,7 @@ ggplot(homes, aes(x=YearBuilt, y=TotalValue)) +
   stat_summary(fun.y="mean", colour="red", geom="point", size=3) +
   coord_cartesian(xlim=c(1950,2016), ylim=c(0,1e6))
 
-# we can add the median 
+# we can add the median and turn the points into lines
 ggplot(homes, aes(x=YearBuilt, y=TotalValue)) + 
   geom_point(position=position_jitter(w=0.2,h=0), shape=".") +
   stat_summary(fun.y="mean", colour="red", geom="line") +
@@ -442,7 +457,8 @@ avHome <- data.frame(x=median(homes$FinSqFt),
                      y=median(homes$TotalValue))
 avHome # the average home
 
-# make scatterplot and add summary stat
+# make scatterplot and add summary stat;
+# Notice we used two different data frames: homes and avHome
 ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point() +
   geom_point(data=avHome, aes(x=x,y=y), color="red", size=4)
 
@@ -482,9 +498,9 @@ sc <- ggplot(chickwts, aes(x=feed, y=weight)) +
 sc
 
 # now to calculate means and standard errors
-fMean <- tapply(chickwts$weight, chickwts$feed, mean)
-fSE <- tapply(chickwts$weight, chickwts$feed, function(x) sd(x)/sqrt(length(x)))
-chick2 <- data.frame(feed=names(fMean), fMean, fSE, row.names = NULL)
+chick2 <- chickwts %>% group_by(feed) %>% 
+  summarise(fMean = mean(weight),
+            fSE = sd(weight)/sqrt(length(weight)))
 
 # now add mean and error bars
 sc + geom_point(data=chick2, aes(x=feed, y=fMean), color="red", size=3) +
@@ -508,7 +524,7 @@ ggplot(chickwts, aes(x=feed, y=weight)) +
 # single line graph of means at each time point with SE bars
 
 # Indometh data (comes with R)
-# Six subjects were given an intravenous injection of indometacin at 11 times,
+# Six subjects were given an intravenous injection of indomethacin at 11 times,
 # and each time plasma concentrations of indometacin was measured.
 
 # Here we make a line plot for each subject:
@@ -519,12 +535,9 @@ ggplot(Indometh, aes(x=time,y=conc, group=Subject)) +
 # with SE bars.
 
 # first calculate means and SEs
-tMean <- tapply(Indometh$conc, Indometh$time, mean)
-tSE <- tapply(Indometh$conc, Indometh$time, function(x)sd(x)/sqrt(length(x)))
-
-# ggplot requires data in data frame
-Indo2 <- data.frame(time=unique(Indometh$time), tMean, tSE, row.names = NULL)
-Indo2
+Indo2 <- Indometh %>% group_by(time) %>% 
+  summarise(tMean = mean(conc),
+            tSE = sd(conc)/sqrt(length(conc)))
 
 # now ready to create plot
 ggplot(Indo2, aes(x=time,y=tMean)) +
@@ -534,7 +547,7 @@ ggplot(Indo2, aes(x=time,y=tMean)) +
 # or again we can use stat_summary()
 ggplot(Indometh, aes(x=time,y=conc)) +
   stat_summary(fun.data="mean_cl_normal", geom="errorbar", width=0.1) +
-  stat_summary(fun.y = mean, geom="line")
+  stat_summary(fun.y = "mean", geom = "line")
 
 
 # maps

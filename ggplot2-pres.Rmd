@@ -275,7 +275,7 @@ Let's go to R!
 * Chang, W. (2013), _R Graphics Cookbook_, O'Reilly.
 
 **ggplot2 cheat sheet**    
-http://www.rstudio.com/wp-content/uploads/2015/04/ggplot2-cheatsheet.pdf
+https://www.rstudio.com/wp-content/uploads/2015/12/ggplot2-cheatsheet-2.0.pdf
 
 **Cookbook for R - Graphs**   
 http://www.cookbook-r.com/Graphs/
