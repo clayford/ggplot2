@@ -10,17 +10,17 @@ output:
 
 ## About ggplot2
 
-- Developed by Hadley Wickham in 2005
+- Developed by Hadley Wickham in 2005.
 
-- Implements the graphics scheme described in the book _The Grammar of Graphics_ by Leland Wilkinson
+- Implements the graphics scheme described in the book _The Grammar of Graphics_ by Leland Wilkinson.
 
-- does not create interactive or 3D graphics
+- Does not create interactive or 3D graphics.
 
-- ~~As of February 2014, officially in maintenance mode, meaning no new features will be added.~~ ggplot2 2.0 released in Dec 2015 with over 100 fixes and improvements. 
+- ~~As of February 2014, officially in maintenance mode, meaning no new features will be added.~~ ggplot2 2.0 released in December 2015 with over 100 fixes and improvements. 
   
 ## The Grammar of Graphics
 
-The *Grammar of Graphics* boiled down to 5 bullets, courtesy of Wickham (2009):
+The *Grammar of Graphics* boiled down to 5 bullets, courtesy of Wickham (2016, p. 4):
 
 - a statistical graphic is a mapping from data to **aes**thetic attributes (location, color, shape, size) of **geom**etric objects (points, lines, bars). 
 
@@ -36,7 +36,7 @@ The *Grammar of Graphics* boiled down to 5 bullets, courtesy of Wickham (2009):
 
 ![alt text](ggbasics.jpg)
 
-www.rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf
+www.rstudio.com/wp-content/uploads/2015/12/ggplot2-cheatsheet-2.0.pdf
 
 ## Basic ggplot2 syntax
 
@@ -111,7 +111,6 @@ ggplot(iris, aes(x = Species, y = Sepal.Width)) +
   geom_boxplot() 
 ```
 
-
 ## Moving beyond `ggplot` + `geoms`
 
 * A natural next step in exploratory graphing is to create plots of subsets of data. These are called facets in ggplot2.
@@ -132,16 +131,14 @@ Examples:
 ## ggplot2 example - `facet_wrap` (common scales)
 ```{r, message=FALSE, fig.height=3, fig.width=6}
 ggplot(iris, aes(x = Petal.Width, y = Sepal.Width)) + 
-  geom_point() + geom_smooth(method="lm") +
-  facet_wrap(~ Species)
+  geom_point() + facet_wrap(~ Species)
 
 ```
 
 ## ggplot2 example - `facet_wrap` (free x scales)
 ```{r, message=FALSE, fig.height=3, fig.width=6}
 ggplot(iris, aes(x = Petal.Width, y = Sepal.Width)) + 
-  geom_point() + geom_smooth(method="lm") +
-  facet_wrap(~ Species, scales = "free_x")
+  geom_point() + facet_wrap(~ Species, scales = "free_x")
 
 ```
 
@@ -159,7 +156,7 @@ ggplot(iris, aes(x = Petal.Width)) +
 
 * Scales control the mapping from data to aesthetics and provide tools to read the plot (ie, axes and legends).
 
-* Every aesthetic has a default scale. To add or modify a scale, use a `scale` function. 
+* Every aesthetic has a default scale. To modify a scale, use a `scale` function. 
 
 * All scale functions have a common naming scheme:
 `scale` `_` name of aesthetic `_` name of scale
@@ -221,15 +218,13 @@ ggplot(iris, aes(x=Petal.Width, y=Petal.Length)) +
 
 - **The stat and geom functions can use each other's arguments.**
 
-- When consulting the documentation for a particular `geom`, you'll notice there is also documentation for an associated `stat`, and vice versa.
+- When consulting the documentation for a particular `geom` you'll notice there is also documentation for an associated `stat`, and vice versa. (an exception is `geom_point` and `stat_identity`.)
 
-- An exception is `geom_point` and `stat_identity`.
-
-- Understanding hows geoms and statistical transformations work together in ggplot2 can help you master the syntax faster.
+- Understanding how geoms and statistical transformations work together in ggplot2 can help you master the syntax faster.
 
 ## Update themes and labels
 
-* The default ggplot2 theme is excellent. It follows the advice of several landmark papers regarding statistics and visual perception. (Wickham 2009, p. 141)
+* The default ggplot2 theme is excellent. It follows the advice of several landmark papers regarding statistics and visual perception. (Wickham 2016, p. 176)
 
 * However you can change the theme using ggplot2's themeing system. To date, there are seven built-in themes: `theme_gray` (_default_), `theme_bw`, `theme_linedraw`, `theme_light`, `theme_dark`, `theme_minimal`, `theme_classic`
 

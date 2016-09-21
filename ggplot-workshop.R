@@ -18,7 +18,7 @@
 # only submit these lines if you don't already have these packages installed. 
 install.packages("ggplot2")
 install.packages("gridExtra") # to fit multiple plots in a window
-
+install.packages("dplyr")
 
 # We'll also use the scales package; when you install ggplot2, the scales
 # package is also installed
@@ -28,23 +28,33 @@ library(dplyr)
 
 # Data --------------------------------------------------------------------
 
-# Albemarle County real estate data with City identified as "CHARLOTTESVILLE",
-# "EARLYSVILLE", "CROZET", "NORTH GARDEN","SCOTTSVILLE", "KESWICK"
+# Albemarle County real estate data.
 
 # Downloaded from Office of Geographic Data Services, 19-Sept-2016
 # http://www.albemarle.org/department.asp?department=gds&relpage=3914#Parcels
+
+# Data for records with City identified as "CHARLOTTESVILLE", "EARLYSVILLE",
+# "CROZET", "NORTH GARDEN","SCOTTSVILLE", "KESWICK"
 
 # R script to download and prepare data:
 # https://github.com/clayford/ggplot2/blob/master/albemarle_county_homes.R
 
 homes <- read.csv("albemarle_real_estate.csv")
 
-# or download and read in:
+# or read in over the internet:
 url1 <- "http://people.virginia.edu/~jcf2d/workshops/ggplot2/albemarle_real_estate.csv"
 homes <- read.csv(url1)
 class(homes) # data.frame
 
 str(homes)
+
+# reorder the levels of Condition:
+levels(homes$Condition) # out of order
+homes$Condition <- factor(homes$Condition, 
+                          levels = c("Substandard", "Poor", "Fair", "Average", "Good", "Excellent"))
+
+levels(homes$Condition) # better
+
 
 # One Variable ------------------------------------------------------------
 
@@ -73,24 +83,29 @@ ggplot(homes, aes(x=FinSqFt, y=..density..)) +
 ggplot(homes, aes(x=FinSqFt, y=..density..)) + 
   geom_histogram(binwidth=250, color="black", fill="white") +
   geom_density(color="red")
-# Notice I "mapped" fixed values to the color and fill aesthetic
+# Notice I "set" the color and fill values instead of "mapping" a variable
 
 
 # Before we go further, important to note we can save a plot object and add to
 # it:
-p <- ggplot(homes, aes(x=FinSqFt, y=..density..))
+p <- ggplot(homes, aes(x=FinSqFt))
 p # nothing to see, no layers
+
+# now add a geom layer
 p + geom_histogram(binwidth=300)
 
-# And now try geom_density()
-p + geom_density(color="red")
+# And now try geom_density(); notice I can set the aesthetic mapping in a geom
+# function:
+p + geom_density(aes(y = ..density..), color="red")
 
 # and combine density and histogram
-p + geom_density(color="red") + geom_histogram(alpha=1/3)
+p + geom_histogram(aes(y = ..density..), bins = 75, alpha=1/3) + 
+  geom_density(color="red") 
+  
 # alpha is an aesthetic that defines "transparancy"; range: 0 to 1
 
 # facet by condition:
-p + geom_histogram(binwidth=300) + facet_wrap(~ Condition)
+p + geom_histogram(bins=75) + facet_wrap(~ Condition)
 
 # overlayed histograms by condition
 ggplot(homes, aes(x=FinSqFt, fill=Condition)) + 
@@ -102,14 +117,7 @@ ggplot(subset(homes, Condition %in% c("Excellent","Good","Average")),
        aes(x=FinSqFt, fill=Condition)) + 
   geom_histogram(position = "identity", alpha=1/3, binwidth=250) 
 
-# Change order in legend using scales function
-# The limits argument sets the order
-ggplot(subset(homes, Condition %in% c("Excellent","Good","Average")), 
-       aes(x=FinSqFt, fill=Condition)) + 
-  geom_histogram(position = "identity", alpha=1/3, binwidth=250) +
-  scale_fill_discrete(limits=c("Excellent","Good","Average"))
 
-  
 
 ####################################
 # YOUR TURN! 
@@ -125,17 +133,15 @@ ggplot(subset(homes, Condition %in% c("Excellent","Good","Average")),
 # Bar Plots help us visualize how discrete values are distributed:
 ggplot(homes, aes(x=Condition)) + geom_bar()
 
-# Use a scales function to re-order x-axis
-ggplot(homes, aes(x=Condition)) + geom_bar() +
-  scale_x_discrete(limits=c("Excellent","Good","Average","Fair","Poor","Substandard"))
-
 # the coord_flip() function allows us to flip the coordinate axis
 ggplot(homes, aes(x=Condition)) + geom_bar() +
-  scale_x_discrete(limits=c("Excellent","Good","Average","Fair","Poor","Substandard")) +
   coord_flip() 
 
-# Let's map the Remodeled indicator to fill;
-# we need to declare Remodeled as a "factor"; stored as numbers: 0 and 1
+# Let's map the Remodeled indicator to fill; 
+# The result is weird since since Remodled is either 0 or 1
+ggplot(homes, aes(x=Condition, fill=Remodeled)) + geom_bar()
+
+# Let's declare Remodeled as a "factor";
 ggplot(homes, aes(x=Condition, fill=factor(Remodeled))) + geom_bar()
 
 # Note the "stacked" position. We can change that with the position argument:
@@ -147,12 +153,13 @@ ggplot(homes, aes(x=Condition, fill=factor(Remodeled))) +
 # function.
 ggplot(homes, aes(x=Condition, fill=factor(Remodeled))) + 
   geom_bar(position = "dodge") +
-  scale_fill_discrete(name="Remodeled", labels = c("Original","Remodeled")) +
-  scale_x_discrete(limits=c("Excellent","Good","Average","Fair","Poor","Substandard"))
+  scale_fill_discrete(name="Remodeled", labels = c("Original","Remodeled"))
+
 
 # By default, the stat for geom_bar (stat_count) counts up things in your data 
-# frame. What if you already have counts? Use stat ="identity" (stat_identity)
-# and map value to y aesthetic. Let's make a bar plot for remodeled homes.
+# frame. It assumes you have one record per observation in your data. What if 
+# you already have counts? Use stat ="identity" (stat_identity) and map value to
+# the y aesthetic. Let's make a bar plot for remodeled homes.
 remod <- as.data.frame(table(homes$Remodeled))
 class(remod)
 remod
@@ -169,17 +176,16 @@ ggplot(remod, aes(x=Var1, y=Freq)) +
   geom_bar(stat="identity", width=0.5) + 
   scale_x_discrete(labels=c("Original","Remodeled")) +
   labs(x=NULL, y="Number of Homes", 
-       title="Number of remodeled versus original homes")
+       title="Number of remodeled versus original homes [remod]")
 
 # and it's worth noting the above example was contrived to demonstrate the 
 # difference between stat_bin and stat_identity'. We could have used our raw 
-# data to create the same plot. Below stat="count" is the default; we don't need
-# to include it.
+# data to create the same plot. 
 ggplot(homes, aes(x=factor(Remodeled))) + 
-  geom_bar(stat="count", width=0.5) +
+  geom_bar(width=0.5) +
   scale_x_discrete(labels=c("Original","Remodeled")) +
   labs(x=NULL, y="Number of Homes", 
-       title="Number of remodeled versus original homes")
+       title="Number of remodeled versus original homes [homes]")
 
 
 # Two variables -----------------------------------------------------------
@@ -200,7 +206,7 @@ ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point(shape=".")
 
 # maybe zoom in? We can do that with coord_cartesian()
 ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point(alpha=1/5) +
-  coord_cartesian(xlim=c(0,3000),ylim=c(0,5e5))
+  coord_cartesian(xlim=c(0,5000),ylim=c(0,1e6))
 
 # Another approach is to use facets: break the data into subsets 
 ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point() +
@@ -215,6 +221,12 @@ p3 <- ggplot(homes, aes(x=FinSqFt, y=TotalValue)) +
   geom_point(alpha=1/6) +
   facet_wrap(~ Condition, scales = "free")
 p3
+
+# yet another strategy is to bin the points and count the number in each using
+# geom_hex()
+ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_hex()
+ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_hex(bins = 50)
+
 
 
 #################################### 
@@ -267,13 +279,14 @@ p3 + geom_smooth(aes(color = "smooth"), se=FALSE) +
   geom_smooth(aes(color = "linear"), method="lm", se=FALSE) +
   scale_color_manual("Fitted Lines", values = c("blue","red"))
 
-# Let's just look at Average, Excellent and Good homes.
-# We can replace the data frame using the %+% operator
+# Let's just look at Average, Excellent and Good homes, and fit quadratic and
+# cubic lines as well. We can replace the data frame using the %+% operator
 p3 %+% 
   subset(homes, Condition %in% c("Average","Excellent","Good")) + 
   geom_smooth(aes(color = "smooth"), se=FALSE) +
   geom_smooth(aes(color = "linear"), method="lm", se=FALSE) +
-  scale_color_manual("Fitted Lines", values = c("blue","red"))
+  geom_smooth(aes(color = "quadratic"), method="lm", formula = y ~ poly(x, 2), se=FALSE) +
+  labs(color = "Fitted Line")
 
 
 # Log Transformations in scatter plots
@@ -285,23 +298,32 @@ p3 %+%
 ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point()
 
 # Maybe try log base 10 transformation directly:
-ggplot(homes, aes(x=log10(FinSqFt), y=log10(TotalValue))) + geom_point()
+ggplot(homes, aes(x=log10(FinSqFt), y=log10(TotalValue))) + geom_point(alpha = 1/5)
 
 # The scale of the axes is on the log10 scale because the data has been
 # transformed.
 
 # We can use scale functions to both transform the data and map the scale of the
 # axes to the original data.
-ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + geom_point(alpha=1/5) +
-  scale_x_log10(labels=comma) + scale_y_log10(labels=dollar)
-
+ggplot(homes, aes(x=FinSqFt, y=TotalValue)) + 
+  geom_point(alpha=1/5) +
+  scale_x_log10(labels=comma) + 
+  scale_y_log10(labels=dollar) +
+  geom_smooth(se=F) +
+  geom_smooth(method="lm", se=F, color="red")
 
 
 # Boxplots are good for visualizing a continous variable conditional on a
 # discrete variable. Let's look at TotalValue by number of FullBaths:
 
-ggplot(homes, aes(x=FullBath,y=TotalValue)) + geom_boxplot()
-# oops. FullBath is not discrete. This works.
+ggplot(homes, aes(x=FullBath, y=TotalValue)) + geom_boxplot()
+
+# oops. FullBath is not discrete. This works:
+ggplot(homes, aes(x = FullBath, y = TotalValue, group = FullBath)) + geom_boxplot()
+
+# and so does this (convert FullBath to factor):
+ggplot(homes, aes(x=factor(FullBath), y=TotalValue)) + geom_boxplot()
+
 p4 <- ggplot(homes, aes(x=factor(FullBath),y=TotalValue))
 p4 + geom_boxplot()
 
@@ -348,12 +370,12 @@ ggplot(subset(homes, TotalValue < 1e6),
 homes0 <- subset(homes, Bedroom==0)
 nrow(homes0)
 
-# plot total value per Number of Full Baths for homes with 0 bedrooms
+# plot total value per Number of Full Baths for homes with 0 bedrooms using 
+# geom_jitter(). geom_jitter adds some width (left-right) "jitter" to the points
+# so they don't overplot.
 ggplot(homes0, aes(x=factor(FullBath), y=TotalValue)) + 
-  geom_point(position = position_jitter(w = 0.1, h = 0)) +
+  geom_jitter(width = 0.1, height = 0) +
   scale_y_continuous(labels=dollar)
-# position_jitter(w = 0.1, h = 0) means jitter points left-and-right but not
-# up-and-down.
 
 # Let's go back to the homes data...
 
@@ -619,3 +641,22 @@ theme_set(prevTheme)
 ggplot(airquality, aes(x=Temp)) + geom_freqpoly(binwidth=2) +
   facet_wrap(~Month)
 
+# see package ggthemes for more themes!
+# install.packages("ggthemes")
+library(ggthemes)
+
+# Wall Street Journal theme
+ggplot(iris, aes(x=Petal.Length, y = Petal.Width, color = Species)) + 
+  geom_point() + geom_smooth(se=F) + theme_wsj()
+
+# google docs theme
+ggplot(iris, aes(x=Petal.Length, y = Petal.Width, color = Species)) + 
+  geom_point() + geom_smooth(se=F) + theme_gdocs()
+
+# fivethirtyeight.com theme
+ggplot(iris, aes(x=Petal.Length, y = Petal.Width, color = Species)) + 
+  geom_point() + geom_smooth(se=F) + theme_fivethirtyeight()
+
+# Tufte's theme (based on The Visual Display of Quantitative Information)
+ggplot(iris, aes(x=Petal.Length, y = Petal.Width, color = Species)) + 
+  geom_point() + geom_smooth(se=F) + theme_tufte()
