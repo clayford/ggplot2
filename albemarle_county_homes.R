@@ -11,18 +11,15 @@
 # such as year built, finished square footage, number of rooms, and condition. 
 # http://www.albemarle.org/gds/gisdata/CAMA/CAMA_CardLevelData_TXT.zip
 
+library(dplyr)
 
 link <- "http://www.albemarle.org/gds/gisdata/CAMA/CAMA_CardLevelData_TXT.zip"
 download.file(link, destfile = basename(link))
 unzip(basename(link), list = TRUE) # list files, but don't extract
 unzip(basename(link), "CAMA_CardLevelData.txt") # extract file to working directory
-dat <- read.csv("CAMA_CardLevelData.txt", stringsAsFactors = FALSE)
-names(dat)
+card_level <- read.csv("CAMA_CardLevelData.txt", stringsAsFactors = FALSE)
+names(card_level)
 
-# select columns I want
-dat <- dat[,c("TMP","YearBuilt","Condition","CardType","YearRemodeled",
-              "NumStories","FinSqFt","Bedroom","FullBath","HalfBath",
-              "TotalRooms")]
 
 # Real Estate Information - Parcel Level Data.  This file contains information
 # about the parcel itself such as owner information, deed acreage value, and
@@ -34,23 +31,28 @@ link2 <- "http://www.albemarle.org/gds/gisdata/CAMA/CAMA_ParcelInfo_TXT.zip"
 download.file(link2, destfile = basename(link2))
 unzip(basename(link2), list = TRUE) # list files, but don't extract
 unzip(basename(link2), "CAMA_ParcelInfo.txt") # extract file to working directory
-datVal <- read.csv("CAMA_ParcelInfo.txt", stringsAsFactors = FALSE)
+parcel_level <- read.csv("CAMA_ParcelInfo.txt", stringsAsFactors = FALSE)
+# subset for parcels with only 1 card
+parcel_level <- subset(parcel_level, Cards == 1)
 
-# select columns I want 
-datVal <- datVal[,c("ParcelID","City","TotalValue")]
 
 # merge primary card level data with parcel level data
-datAll <- merge(dat,datVal,by.x = "TMP",by.y = "ParcelID")
-rm(dat, datVal, link, link2)
+datAll <- left_join(card_level, parcel_level,by = c("TMP" = "ParcelID"))
+# datAll <- merge(card_level, parcel_level,by.x = "TMP",by.y = "ParcelID")
+rm(link, link2)
 
 # select only certain cities
 datAll <- subset(datAll, City %in% c("CHARLOTTESVILLE", "EARLYSVILLE", "CROZET", 
                              "NORTH GARDEN","SCOTTSVILLE", "KESWICK"))
 
+
+
 # drop any rows with missing data
-datAll <- na.omit(datAll)
+# datAll <- na.omit(datAll)
 
 # miscellaneous clean up and variable derivation
+# CardType = R
+# Cards = 1
 datAll$CardType <- NULL
 datAll$TMP <- NULL
 datAll <- subset(datAll, YearBuilt > 0)
@@ -63,8 +65,13 @@ datAll <- subset(datAll, FinSqFt > 0)
 datAll$Condition <- trimws(datAll$Condition)
 datAll <- subset(datAll, Condition != "")
 
+vars <- c("YearBuilt", "YearRemodeled", "Condition", "NumStories", "FinSqFt", "Bedroom", "FullBath", 
+          "HalfBath", "TotalRooms", "LotSize", "TotalValue", "City")
+datAll <- datAll[,vars]
+
 write.csv(x = datAll, file = "albemarle_real_estate.csv", row.names = FALSE)
 
-datAll <- read.csv("albemarle_real_estate.csv")
+homes <- read.csv("albemarle_real_estate.csv")
 
+save(card_level, parcel_level, homes, file = "AC_homes.Rda")
 
