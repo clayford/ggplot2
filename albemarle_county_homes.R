@@ -53,6 +53,7 @@ datAll <- subset(datAll, City %in% c("CHARLOTTESVILLE", "EARLYSVILLE", "CROZET",
 # miscellaneous clean up and variable derivation
 # CardType = R
 # Cards = 1
+datAll <- subset(datAll, datAll$CardType == "R")
 datAll$CardType <- NULL
 datAll$TMP <- NULL
 datAll <- subset(datAll, YearBuilt > 0)
